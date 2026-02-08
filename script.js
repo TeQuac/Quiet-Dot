@@ -3,8 +3,9 @@ const counter = document.getElementById('counter');
 const donate = document.getElementById('donate');
 
 let taps = 0;
-let misses = 0; // unsichtbarer Fehlklick-Zähler
+let misses = 0;
 
+// Punkt bewegen + Treffer zählen
 function moveDot(event) {
   event.stopPropagation(); // verhindert Fehlklick-Zählung
 
@@ -26,11 +27,12 @@ function moveDot(event) {
   counter.textContent = 'Taps: ' + taps;
 }
 
-// Klick auf Punkt
+// Klick / Touch auf Punkt
 dot.addEventListener('click', moveDot);
+dot.addEventListener('touchstart', moveDot);
 
-// Klick auf Hintergrund = Fehlklick
-document.body.addEventListener('click', () => {
+// Fehlklick zählen (Hintergrund)
+function registerMiss() {
   misses++;
 
   if (misses >= 5) {
@@ -38,4 +40,8 @@ document.body.addEventListener('click', () => {
     misses = 0;
     counter.textContent = 'Taps: 0';
   }
-});
+}
+
+// Klick / Touch auf Hintergrund
+document.body.addEventListener('click', registerMiss);
+document.body.addEventListener('touchstart', registerMiss);
