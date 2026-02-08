@@ -28,26 +28,15 @@ function hitDot() {
   moveDot();
 }
 
-// Klick/Touch-Handler
-function handleTap(event) {
-  const target = event.target;
-
-  if (target === dot) {
-    hitDot();
-    return;
-  }
-
-  if (target === donate) return;
-
-  // Fehlklick
+// Fehlklick Reset
+function checkMiss() {
   misses++;
-
   if (misses >= 5) {
     taps = 0;
     misses = 0;
     counter.textContent = 'Taps: 0';
 
-    // Punkt wieder mittig setzen (innerhalb erlaubtem Bereich)
+    // Punkt wieder mittig setzen
     const padding = 10;
     const donateWidth = donate.offsetWidth + 20;
     const donateHeight = donate.offsetHeight + 20;
@@ -60,9 +49,18 @@ function handleTap(event) {
   }
 }
 
-// Desktop + Mobile Events
-const isTouchDevice = 'ontouchstart' in window;
-document.addEventListener(isTouchDevice ? 'touchstart' : 'click', handleTap);
+// --- Event Listener ---
+// Punkt trifft
+dot.addEventListener('click', hitDot);
+dot.addEventListener('touchstart', hitDot);
 
-// Punkt beim Laden initial positionieren
+// Hintergrund Fehlklick (weiß + ignoriert Donate)
+document.body.addEventListener('click', (e) => {
+  if (e.target !== dot && e.target !== donate) checkMiss();
+});
+document.body.addEventListener('touchstart', (e) => {
+  if (e.target !== dot && e.target !== donate) checkMiss();
+});
+
+// Initialposition beim Laden
 window.addEventListener('load', moveDot);
