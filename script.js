@@ -43,9 +43,15 @@ function handleTap(event) {
   misses++;
 
   if (misses >= 5) {
+    // Reset Zähler
     taps = 0;
     misses = 0;
     counter.textContent = 'Taps: 0';
+
+    // Punkt wieder in Ausgangslage (Mitte des Bildschirms)
+    dot.style.left = (window.innerWidth / 2 - dot.offsetWidth / 2) + 'px';
+    dot.style.top = (window.innerHeight / 2 - dot.offsetHeight / 2) + 'px';
+}
   }
 }
 
