@@ -5,39 +5,72 @@
   <title>Quiet Dot</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Zusätzliche sanfte Landing-Page Styles */
+    body {
+      background: linear-gradient(to bottom, #FCFCFC, #F2F2F2);
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .container {
+      max-width: 350px;
+      padding: 20px;
+    }
+    h1 {
+      color: #555;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+    .button {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 12px 20px;
+      background: #555;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 16px;
+      opacity: 0.8;
+      transition: opacity 0.3s ease;
+    }
+    .button:hover {
+      opacity: 1;
+    }
+    .qr img {
+      width: 180px;
+      margin-top: 20px;
+    }
+    .install-note {
+      color: #888;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Quiet Dot</h1>
+    <p>A tiny calming app for your fingers. Tap the dot, watch it teleport, and enjoy a moment of calm.</p>
 
-  <div style="text-align:center; padding-top:80px;">
-    <h1 style="color:#555; font-family:sans-serif;">Quiet Dot</h1>
-    <p style="color:#666; max-width:300px; margin:auto;">
-      A tiny calming app for your fingers. Tap the dot, watch it teleport, and enjoy a moment of calm.
-    </p>
-    
     <!-- Button zur App -->
-    <a href="index.html" style="
-      display:inline-block;
-      margin-top:20px;
-      padding:12px 20px;
-      background:#555;
-      color:white;
-      border-radius:8px;
-      text-decoration:none;
-      font-size:16px;
-      opacity:0.8;
-    ">Open App</a>
+    <a href="index.html" class="button">Open App</a>
 
-    <!-- Hinweis zur Installation -->
-    <p style="color:#888; font-size:12px; margin-top:10px;">
-      Open in Safari, then tap the Share icon and select "Add to Home Screen" to install.
-    </p>
+    <p class="install-note">Open in Safari, then tap the Share icon and select "Add to Home Screen" to install.</p>
 
     <!-- QR-Code -->
-    <div style="margin-top:40px;">
-      <img src="qr-code.png" alt="QR Code to Quiet Dot" style="width:180px;">
-      <p style="color:#888; font-size:12px;">Scan to open on your iPhone/iPad</p>
+    <div class="qr">
+      <img src="qr-code.png" alt="QR Code to Quiet Dot">
+      <p class="install-note">Scan to open on your iPhone/iPad</p>
     </div>
   </div>
-
 </body>
 </html>
