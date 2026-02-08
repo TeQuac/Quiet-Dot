@@ -1,6 +1,6 @@
-// -----------------------------
-// Silentap - Haupt-Script
-// -----------------------------
+// ----------------------------
+// Silentap - Script
+// ----------------------------
 
 // Zähler
 let counter = 0;
@@ -8,22 +8,20 @@ let counter = 0;
 // Elemente
 const dot = document.getElementById('dot');
 const counterDisplay = document.getElementById('counter');
-const supportButton = document.getElementById('supportButton'); // Dein Support-Button
-const dotSize = 50; // Punktgröße in px (wie im CSS definiert)
-const padding = 10; // Abstand zum Rand
+const supportButton = document.getElementById('supportButton');
+const dotSize = 50;  // Größe des Punktes
+const padding = 10;  // Abstand zu Rändern
 
-// Funktion zum Teleportieren des Punktes
+// Teleport-Funktion
 function teleportDot() {
-    // Höhe für Support-Button berücksichtigen
-    const buttonHeight = supportButton.offsetHeight + 20;
+    const buttonHeight = supportButton.offsetHeight + 20; // Abstand über Support-Button
 
-    // Begrenzung des Teleportbereichs
+    // Begrenzung für Punkt
     const maxX = window.innerWidth - dotSize - padding;
     const maxY = window.innerHeight - dotSize - padding - buttonHeight;
     const minX = padding;
     const minY = padding;
 
-    // Zufällige Position innerhalb der erlaubten Fläche
     const randomX = Math.floor(Math.random() * (maxX - minX) + minX);
     const randomY = Math.floor(Math.random() * (maxY - minY) + minY);
 
@@ -38,13 +36,13 @@ dot.addEventListener('click', () => {
     teleportDot();
 });
 
-// Optional: Punkt initial positionieren beim Laden
+// Startposition beim Laden
 window.addEventListener('load', () => {
     teleportDot();
     counterDisplay.innerText = counter;
 });
 
-// Optional: Punkt reagiert auf Fenstergröße ändern
+// Punkt bewegt sich auch, wenn Fenstergröße geändert wird
 window.addEventListener('resize', () => {
     teleportDot();
 });
