@@ -8,6 +8,8 @@ body {
     background-color: #f8f8f8; /* sanftes weiß/hellgrau */
     font-family: Arial, sans-serif;
     overflow: hidden; /* verhindert Scrollen */
+   height: 100vh;        /* NEU */
+    width: 100vw;         /* NEU */
 }
 
 #dot {
