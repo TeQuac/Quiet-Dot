@@ -13,6 +13,30 @@ body {
     width: 100vw;         /* NEU */
 }
 
+.hidden {
+  display: none;
+}
+
+#start-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 28px;
+  border: none;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+#start-button:hover {
+  background: #000;
+}
+
 #dot {
   width: 50px;
   height: 50px;
