@@ -1,66 +1,66 @@
- /* ----------------------------
-    Silentap - Styles
- ---------------------------- */
- 
- body {
-     margin: 0;
-     padding: 0;
-     background-color: #f8f8f8;
-     font-family: Arial, sans-serif;
-     overflow: hidden;
+/* ----------------------------
+   Silentap - Styles
+---------------------------- */
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
     touch-action: none;
     -webkit-text-size-adjust: 100%;
- 
-     height: 100vh;        /* NEU */
-     width: 100vw;         /* NEU */
- }
- 
- .hidden {
-   display: none;
- }
- 
- #start-button {
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   padding: 12px 28px;
-   border: none;
-   border-radius: 999px;
-   background: #111;
-   color: #fff;
-   font-size: 18px;
-   cursor: pointer;
-   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-   z-index: 20;
- }
- 
-@@ -37,41 +39,50 @@ body {
-   background: #000;
- }
- 
- #dot {
-   width: 50px;
-   height: 50px;
-   background-color: #000;
-   border-radius: 50%;
-   position: absolute;
-   top: 43%;
-   left: 43%;    /* Position */
-   cursor: pointer;
-   transition: top 0.2s ease, left 0.2s ease;
-   z-index: 10;
- }
- 
- #counter {
-     position: fixed;
-     top: 10px;
-     left: 10px;
-     font-size: 18px;
-     color: #333;
-     z-index: 5;
- }
- 
+
+    height: 100vh;        /* NEU */
+    width: 100vw;         /* NEU */
+}
+
+.hidden {
+  display: none;
+}
+
+#start-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 28px;
+  border: none;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+#start-button:hover {
+  background: #000;
+}
+
+#dot {
+  width: 50px;
+  height: 50px;
+  background-color: #000;
+  border-radius: 50%;
+  position: absolute;
+  top: 43%;
+  left: 43%;    /* Position */
+  cursor: pointer;
+  transition: top 0.2s ease, left 0.2s ease;
+  z-index: 10;
+}
+
+#counter {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
+    color: #333;
+    z-index: 5;
+}
+
 #misses {
   position: fixed;
   top: 10px;
@@ -70,19 +70,19 @@
   z-index: 5;
 }
 
- #donate {
-   position: fixed;
-   bottom: 10px;
-   right: 10px;
-   background: #555;
-   color: white;
-   padding: 10px;
-   border-radius: 8px;
-   text-decoration: none;
-   opacity: 0.8;
-   z-index: 5;
- }
- 
- #donate:hover {
-   opacity: 1;
- }
+#donate {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: #555;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  opacity: 0.8;
+  z-index: 5;
+}
+
+#donate:hover {
+  opacity: 1;
+}
