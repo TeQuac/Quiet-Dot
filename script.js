@@ -1,10 +1,4 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/script.js b/script.js
-index 07ce0ec403f3e8999aea890d435f04879f140611..d9f8a5e9a7cfacaa91b68259b140f0c4ab1ec8f1 100644
---- a/script.js
-+++ b/script.js
-@@ -1,135 +1,227 @@
- const dot = document.getElementById('dot');
+const dot = document.getElementById('dot');
  const counter = document.getElementById('counter');
 let missesDisplay = document.getElementById('misses');
  const donate = document.getElementById('donate');
@@ -232,6 +226,3 @@ startButton.addEventListener('click', startGame);
 startButton.addEventListener('touchstart', startGame, { passive: false });
  
  setGameActive(false);
- 
-EOF
-)
