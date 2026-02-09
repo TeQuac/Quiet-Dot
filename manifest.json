@@ -2,7 +2,7 @@
   "name": "Silentap",
   "short_name": "Silentap",
   "start_url": "./index.html",
-  "scope": "./",,
+  "scope": "./",
   "display": "standalone",
   "background_color": "#FAFAFA",
   "theme_color": "#555",
