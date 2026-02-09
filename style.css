@@ -43,8 +43,8 @@ body {
   background-color: #000;
   border-radius: 50%;
   position: absolute;
-  top: 40%;
-  left: 40%;    /* Position */
+  top: 43%;
+  left: 43%;    /* Position */
   cursor: pointer;
   transition: top 0.2s ease, left 0.2s ease;
   z-index: 10;
