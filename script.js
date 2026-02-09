@@ -5,19 +5,18 @@ index 07ce0ec403f3e8999aea890d435f04879f140611..4bd68a341ff6b075381e8962436c78bb
 @@ -1,135 +1,211 @@
  const dot = document.getElementById('dot');
  const counter = document.getElementById('counter');
-+const missesDisplay = document.getElementById('misses');
+const missesDisplay = document.getElementById('misses');
  const donate = document.getElementById('donate');
  const startButton = document.getElementById('start-button');
  
  let taps = 0;
  let misses = 0;
  let gameActive = false;
--const gameElements = [dot, counter, donate];
-+const maxMisses = 2;
-+const gameElements = [dot, counter, missesDisplay, donate];
-+const avoidElements = [counter, missesDisplay, donate];
-+let movementAnimation = null;
-+let movementState = null;
+const maxMisses = 2;
+const gameElements = [dot, counter, missesDisplay, donate];
+const avoidElements = [counter, missesDisplay, donate];
+let movementAnimation = null;
+let movementState = null;
  
  function setGameActive(active) {
    gameActive = active;
@@ -30,90 +29,86 @@ index 07ce0ec403f3e8999aea890d435f04879f140611..4bd68a341ff6b075381e8962436c78bb
      taps = 0;
      misses = 0;
      counter.textContent = 'Taps: 0';
-+    missesDisplay.textContent = `Misses: 0/${maxMisses}`;
+    missesDisplay.textContent = `Misses: 0/${maxMisses}`;
      resetDot();
-+  } else if (movementAnimation) {
-+    cancelAnimationFrame(movementAnimation);
-+    movementAnimation = null;
-+    movementState = null;
+  } else if (movementAnimation) {
+    cancelAnimationFrame(movementAnimation);
+    movementAnimation = null;
+    movementState = null;
    }
  }
  
-+function getDotPosition() {
-+  return {
-+    left: parseFloat(dot.style.left) || 0,
-+    top: parseFloat(dot.style.top) || 0
-+  };
-+}
-+
-+function startMovement(previousPosition, nextPosition) {
-+  const directionX = nextPosition.left - previousPosition.left;
-+  const directionY = nextPosition.top - previousPosition.top;
-+  const length = Math.hypot(directionX, directionY) || 1;
-+
-+  movementState = {
-+    position: { ...nextPosition },
-+    velocity: 0.4,
-+    direction: {
-+      x: directionX / length,
-+      y: directionY / length
-+    }
-+  };
-+
-+  const padding = 10;
-+
-+  const animate = () => {
-+    if (!movementState || !gameActive) return;
-+
-+    const dotSize = dot.offsetWidth;
-+    const minX = padding;
-+    const minY = padding;
-+    const maxX = Math.max(minX, window.innerWidth - dotSize - padding);
-+    const maxY = Math.max(minY, window.innerHeight - dotSize - padding);
-+
-+    movementState.velocity = Math.min(movementState.velocity + 0.04, 8);
-+    movementState.position.left += movementState.direction.x * movementState.velocity;
-+    movementState.position.top += movementState.direction.y * movementState.velocity;
-+
-+    if (movementState.position.left <= minX || movementState.position.left >= maxX) {
-+      movementState.position.left = Math.min(Math.max(movementState.position.left, minX), maxX);
-+      movementState.direction.x *= -1;
-+    }
-+
-+    if (movementState.position.top <= minY || movementState.position.top >= maxY) {
-+      movementState.position.top = Math.min(Math.max(movementState.position.top, minY), maxY);
-+      movementState.direction.y *= -1;
-+    }
-+
-+    dot.style.left = `${movementState.position.left}px`;
-+    dot.style.top = `${movementState.position.top}px`;
-+
-+    movementAnimation = requestAnimationFrame(animate);
-+  };
-+
-+  if (movementAnimation) {
-+    cancelAnimationFrame(movementAnimation);
-+  }
-+  movementAnimation = requestAnimationFrame(animate);
-+}
-+
+function getDotPosition() {
+  return {
+    left: parseFloat(dot.style.left) || 0,
+    top: parseFloat(dot.style.top) || 0
+  };
+}
+
+function startMovement(previousPosition, nextPosition) {
+  const directionX = nextPosition.left - previousPosition.left;
+  const directionY = nextPosition.top - previousPosition.top;
+  const length = Math.hypot(directionX, directionY) || 1;
+
+  movementState = {
+    position: { ...nextPosition },
+    velocity: 0.4,
+    direction: {
+      x: directionX / length,
+      y: directionY / length
+    }
+  };
+
+  const padding = 10;
+
+  const animate = () => {
+    if (!movementState || !gameActive) return;
+
+    const dotSize = dot.offsetWidth;
+    const minX = padding;
+    const minY = padding;
+    const maxX = Math.max(minX, window.innerWidth - dotSize - padding);
+    const maxY = Math.max(minY, window.innerHeight - dotSize - padding);
+
+    movementState.velocity = Math.min(movementState.velocity + 0.04, 8);
+    movementState.position.left += movementState.direction.x * movementState.velocity;
+    movementState.position.top += movementState.direction.y * movementState.velocity;
+
+    if (movementState.position.left <= minX || movementState.position.left >= maxX) {
+      movementState.position.left = Math.min(Math.max(movementState.position.left, minX), maxX);
+      movementState.direction.x *= -1;
+    }
+
+    if (movementState.position.top <= minY || movementState.position.top >= maxY) {
+      movementState.position.top = Math.min(Math.max(movementState.position.top, minY), maxY);
+      movementState.direction.y *= -1;
+    }
+
+    dot.style.left = `${movementState.position.left}px`;
+    dot.style.top = `${movementState.position.top}px`;
+
+    movementAnimation = requestAnimationFrame(animate);
+  };
+
+  if (movementAnimation) {
+    cancelAnimationFrame(movementAnimation);
+  }
+  movementAnimation = requestAnimationFrame(animate);
+}
+
  // Punkt bewegen
  function moveDot() {
    const padding = 10;
--  const donateRect = donate.getBoundingClientRect();
--  const counterRect = counter.getBoundingClientRect();
-+  const avoidRects = avoidElements.map((element) => element.getBoundingClientRect());
+  const avoidRects = avoidElements.map((element) => element.getBoundingClientRect());
    const dotSize = dot.offsetWidth;
    const minX = padding;
    const minY = padding;
    const maxX = Math.max(minX, window.innerWidth - dotSize - padding);
    const maxY = Math.max(minY, window.innerHeight - dotSize - padding);
  
--  let newX = minX;
--  let newY = minY;
-+  const previousPosition = getDotPosition();
-+  let newX = previousPosition.left;
-+  let newY = previousPosition.top;
+  const previousPosition = getDotPosition();
+  let newX = previousPosition.left;
+  let newY = previousPosition.top;
  
    const overlapsRect = (rectA, rectB) => !(
      rectA.right < rectB.left ||
@@ -132,23 +127,18 @@ index 07ce0ec403f3e8999aea890d435f04879f140611..4bd68a341ff6b075381e8962436c78bb
        bottom: candidateY + dotSize
      };
  
--    const overlapsDonate = overlapsRect(dotRect, donateRect);
--    const overlapsCounter = overlapsRect(dotRect, counterRect);
-+    const overlapsAvoid = avoidRects.some((rect) => overlapsRect(dotRect, rect));
+    const overlapsAvoid = avoidRects.some((rect) => overlapsRect(dotRect, rect));
  
      newX = candidateX;
      newY = candidateY;
  
--    if (!overlapsDonate && !overlapsCounter) break;
-+    if (!overlapsAvoid) break;
+    if (!overlapsAvoid) break;
    }
  
--  dot.style.left = newX + 'px';
--  dot.style.top = newY + 'px';
-+  const nextPosition = { left: newX, top: newY };
-+  dot.style.left = `${nextPosition.left}px`;
-+  dot.style.top = `${nextPosition.top}px`;
-+  startMovement(previousPosition, nextPosition);
+  const nextPosition = { left: newX, top: newY };
+  dot.style.left = `${nextPosition.left}px`;
+  dot.style.top = `${nextPosition.top}px`;
+  startMovement(previousPosition, nextPosition);
  }
  
  function getCenteredPosition() {
@@ -166,11 +156,11 @@ index 07ce0ec403f3e8999aea890d435f04879f140611..4bd68a341ff6b075381e8962436c78bb
    const centeredPosition = getCenteredPosition();
    dot.style.left = centeredPosition.left;
    dot.style.top = centeredPosition.top;
-+  if (movementAnimation) {
-+    cancelAnimationFrame(movementAnimation);
-+    movementAnimation = null;
-+  }
-+  movementState = null;
+  if (movementAnimation) {
+    cancelAnimationFrame(movementAnimation);
+    movementAnimation = null;
+  }
+  movementState = null;
  }
  
  // Treffer
@@ -194,14 +184,13 @@ index 07ce0ec403f3e8999aea890d435f04879f140611..4bd68a341ff6b075381e8962436c78bb
    if (target === donate) return;
  
    misses++;
-+  missesDisplay.textContent = `Misses: ${misses}/${maxMisses}`;
+  missesDisplay.textContent = `Misses: ${misses}/${maxMisses}`;
  
--  if (misses >= 5) {
-+  if (misses >= maxMisses) {
+  if (misses >= maxMisses) {
      taps = 0;
      misses = 0;
      counter.textContent = 'Taps: 0';
-+    missesDisplay.textContent = `Misses: 0/${maxMisses}`;
+    missesDisplay.textContent = `Misses: 0/${maxMisses}`;
      resetDot();
    }
  }
