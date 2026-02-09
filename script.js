@@ -6,10 +6,6 @@ const startButton = document.getElementById('start-button');
 let taps = 0;
 let misses = 0;
 let gameActive = false;
-const initialPosition = {
-  left: dot.style.left || getComputedStyle(dot).left,
-  top: dot.style.top || getComputedStyle(dot).top
-};
 const gameElements = [dot, counter, donate];
 
 function setGameActive(active) {
@@ -71,9 +67,21 @@ function moveDot() {
   dot.style.top = newY + 'px';
 }
 
+function getCenteredPosition() {
+  const dotSize = dot.offsetWidth;
+  const left = (window.innerWidth - dotSize) / 2;
+  const top = (window.innerHeight - dotSize) / 2;
+
+  return {
+    left: `${left}px`,
+    top: `${top}px`
+  };
+}
+
 function resetDot() {
-  dot.style.left = initialPosition.left;
-  dot.style.top = initialPosition.top;
+  const centeredPosition = getCenteredPosition();
+  dot.style.left = centeredPosition.left;
+  dot.style.top = centeredPosition.top;
 }
 
 // Treffer
