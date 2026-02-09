@@ -4,53 +4,153 @@
   <meta charset="UTF-8">
   <title>Silentap</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-
   <style>
+    :root {
+      color-scheme: light;
+    }
     body {
-      background: linear-gradient(to bottom, #FCFCFC, #F2F2F2);
+      background: linear-gradient(180deg, #FCFCFC 0%, #F2F2F2 100%);
       margin: 0;
-      font-family: sans-serif;
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       text-align: center;
+      color: #333;
     }
     .container {
-      max-width: 350px;
-      padding: 20px;
+      max-width: 520px;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
     }
-    h1 { color:#555; margin-bottom:10px; }
-    p { color:#666; margin-bottom:20px; line-height:1.4; }
+    .badge {
+      background: rgba(17, 17, 17, 0.08);
+      color: #111;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    h1 {
+      color: #111;
+      margin: 0;
+      font-size: 40px;
+      letter-spacing: -0.02em;
+    }
+    p {
+      color: #555;
+      margin: 0;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
     .button {
-      display:inline-block;
-      margin-bottom:20px;
-      padding:12px 20px;
-      background:#555;
-      color:white;
-      border-radius:8px;
-      text-decoration:none;
-      font-size:16px;
-      opacity:0.8;
-      transition: opacity 0.3s ease;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 14px 22px;
+      background: #111;
+      color: white;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
     }
-    .button:hover { opacity:1; }
-    .qr img { width:180px; margin-top:20px; }
-    .install-note { color:#888; font-size:12px; margin-top:8px; }
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+    }
+    .secondary {
+      background: #fff;
+      color: #111;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      box-shadow: none;
+    }
+    .panel {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+    .qr {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .qr img {
+      width: 180px;
+      height: 180px;
+    }
+    .install-note {
+      color: #777;
+      font-size: 13px;
+      margin: 0;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    .feature {
+      background: rgba(17, 17, 17, 0.04);
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      color: #444;
+    }
+    @media (min-width: 640px) {
+      .actions {
+        flex-direction: row;
+        justify-content: center;
+      }
+      .button {
+        width: auto;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <span class="badge">Minimal Calm Game</span>
     <h1>Silentap</h1>
-    <p>A tiny calming app for your fingers. Tap the dot, watch it teleport, and enjoy a moment of calm.</p>
+    <p>Tap the dot, watch it glide away, and reset your focus in seconds. Silentap is a tiny calming game designed for quick, mindful breaks.</p>
 
-    <a href="index.html" class="button">Open App</a>
-    <p class="install-note">Open in Safari, then tap the Share icon and select "Add to Home Screen" to install.</p>
+    <div class="actions">
+      <a href="index.html" class="button">Open Silentap</a>
+      <a href="#install" class="button secondary">Install Guide</a>
+    </div>
 
-    <div class="qr">
-      <img src="qr-code.png" alt="QR Code to Silentap">
-      <p class="install-note">Scan to open on your iPhone/iPad</p>
+    <div class="features">
+      <div class="feature">✨ Fast sessions, instant reset</div>
+      <div class="feature">🎯 Track taps and misses</div>
+      <div class="feature">📱 Made for iPhone & iPad</div>
+    </div>
+
+    <div class="panel" id="install">
+      <p class="install-note">Open Silentap in Safari, tap the Share icon, then choose “Add to Home Screen”.</p>
+      <div class="qr">
+        <img src="qr-code.png" alt="QR Code to Silentap">
+        <p class="install-note">Scan to open on your iPhone or iPad</p>
+      </div>
     </div>
   </div>
 </body>
