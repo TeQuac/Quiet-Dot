@@ -1,25 +1,25 @@
 <!DOCTYPE html>
- <html lang="en">
- <head>
-   <meta charset="UTF-8">
-   <title>Silentap</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Silentap</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-   
-   <!-- Manifest für PWA -->
-   <!-- App Icon -->
-   <link rel="apple-touch-icon" href="https://i.imgur.com/Bk2ai1h.png">
-   <link rel="manifest" href="manifest.json">
- 
-   <link rel="stylesheet" href="style.css">
- </head>
- <body>
- 
-   <button id="start-button" type="button">Start</button>
-   <div id="dot"></div>
-   <div id="counter">Taps: 0</div>
-  <div id="misses">Misses: 0/2</div>
-  <a href="https://www.paypal.com/ncp/payment/WT9NVQHGSA6TU" target="_blank" rel="noopener noreferrer" id="donate">☕️ Support</a>
- 
-   <script src="script.js"></script>
- </body>
- </html>
+  
+  <!-- Manifest für PWA -->
+  <!-- App Icon -->
+  <link rel="apple-touch-icon" href="https://i.imgur.com/Bk2ai1h.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <button id="start-button" type="button">Start</button>
+  <div id="dot" class="hidden" hidden></div>
+  <div id="counter" class="hidden" hidden>Taps: 0</div>
+  <div id="misses" class="hidden" hidden>Misses: 0/2</div>
+  <a href="https://www.paypal.com/ncp/payment/WT9NVQHGSA6TU" target="_blank" rel="noopener noreferrer" id="donate" class="hidden" hidden>☕️ Support</a>
+
+  <script src="script.js"></script>
+</body>
+</html>
