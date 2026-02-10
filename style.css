@@ -19,6 +19,77 @@ body {
   display: none;
 }
 
+#start-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+
+#start-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+#user-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 18px;
+  color: #222;
+}
+
+#user-highscore {
+  font-size: 16px;
+  color: #555;
+}
+
+#username-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+#username-form label {
+  font-weight: 600;
+}
+
+.username-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#username-input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+#username-save {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#username-error {
+  color: #b40000;
+  font-size: 13px;
+}
+
 #start-button {
   position: absolute;
   top: 50%;
@@ -35,8 +106,41 @@ body {
   z-index: 20;
 }
 
+#start-button.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 #start-button:hover {
   background: #000;
+}
+
+#highscore-ticker {
+  width: min(520px, 90vw);
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 8px 0;
+  position: absolute;
+  top: calc(50% + 70px);
+}
+
+#highscore-track {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: ticker-scroll 18s linear infinite;
+  font-size: 14px;
+  color: #333;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 #dot {
