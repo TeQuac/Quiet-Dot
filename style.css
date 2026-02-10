@@ -3,98 +3,106 @@
 ---------------------------- */
 
 body {
-    margin: 0;
-    padding: 0;
-    background-color: #f8f8f8;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    touch-action: none;
-    -webkit-text-size-adjust: 100%;
-
-    height: 100vh;        /* NEU */
-    width: 100vw;         /* NEU */
+  margin: 0;
+  padding: 0;
+  background-color: #f8f8f8;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-text-size-adjust: 100%;
+  height: 100vh;
+  width: 100vw;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
-#start-screen {
-  position: absolute;
+.overlay {
+  position: fixed;
   inset: 0;
+  z-index: 50;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  text-align: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-#start-header {
+.card {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: center;
+  gap: 10px;
 }
 
-#user-display {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 18px;
-  color: #222;
+.card h2 {
+  margin: 0;
+  font-size: 22px;
 }
 
-#user-highscore {
-  font-size: 16px;
+.card p {
+  margin: 0;
   color: #555;
 }
 
-#username-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 16px;
-  color: #333;
-}
-
-#username-form label {
-  font-weight: 600;
-}
-
-.username-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 #username-input {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
   font-size: 16px;
 }
 
 #username-save {
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   border: none;
   background: #111;
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
 }
 
 #username-error {
   color: #b40000;
-  font-size: 13px;
+  font-size: 14px;
+}
+
+#start-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  align-items: center;
+  justify-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#start-header {
+  align-self: start;
+  margin-top: 10px;
+  text-align: center;
+}
+
+#username-label {
+  font-size: 22px;
+  color: #222;
+  font-weight: 700;
+}
+
+#user-highscore {
+  margin-top: 6px;
+  font-size: 18px;
+  color: #555;
 }
 
 #start-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   padding: 12px 28px;
   border: none;
   border-radius: 999px;
@@ -106,23 +114,18 @@ body {
   z-index: 20;
 }
 
-#start-button.is-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 #start-button:hover {
   background: #000;
 }
 
 #highscore-ticker {
-  width: min(520px, 90vw);
+  align-self: end;
+  width: min(720px, 92vw);
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.05);
-  padding: 8px 0;
-  position: absolute;
-  top: calc(50% + 70px);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 10px 0;
+  margin-bottom: 10px;
 }
 
 #highscore-track {
@@ -135,12 +138,8 @@ body {
 }
 
 @keyframes ticker-scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
 #dot {
@@ -150,29 +149,25 @@ body {
   border-radius: 50%;
   position: absolute;
   top: 43%;
-  left: 43%;    /* Position */
+  left: 43%;
   cursor: pointer;
   transition: top 0.2s ease, left 0.2s ease;
   z-index: 10;
 }
 
-#counter {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    font-size: 18px;
-    color: #333;
-    z-index: 5;
-}
-
+#counter,
+#game-highscore,
 #misses {
   position: fixed;
   top: 10px;
-  right: 10px;
   font-size: 18px;
   color: #333;
   z-index: 5;
 }
+
+#counter { left: 10px; }
+#game-highscore { left: 50%; transform: translateX(-50%); }
+#misses { right: 10px; }
 
 #donate {
   position: fixed;
