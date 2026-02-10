@@ -116,16 +116,7 @@ body {
 
 #start-button:hover {
   background: #000;
-}
 
-#highscore-ticker {
-  align-self: end;
-  width: min(720px, 92vw);
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  padding: 10px 0;
-  margin-bottom: 10px;
 }
 
 #highscore-track {
