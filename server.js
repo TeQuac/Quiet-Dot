@@ -1,30 +1,30 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 8000;
 const ROOT = __dirname;
-const DATA_FILE = path.join(ROOT, 'data', 'users.json');
 
-function ensureDataFile() {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]', 'utf8');
-}
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  host: process.env.PGHOST || 'dpg-d65gom15pdvs73da10ig-a',
+  port: Number(process.env.PGPORT || 5432),
+  database: process.env.PGDATABASE || 'silentap',
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  ssl: process.env.PGSSL === 'disable' ? false : { rejectUnauthorized: false }
+});
 
-function readUsers() {
-  ensureDataFile();
-  try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    const users = JSON.parse(raw);
-    return Array.isArray(users) ? users : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeUsers(users) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(users, null, 2), 'utf8');
+async function ensureSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      name TEXT PRIMARY KEY,
+      highscore INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 }
 
 function sendJson(res, status, payload) {
@@ -93,11 +93,16 @@ const server = http.createServer(async (req, res) => {
   const { pathname } = url;
 
   if (pathname === '/api/users/top' && req.method === 'GET') {
-    const users = readUsers()
-      .sort((a, b) => b.highscore - a.highscore)
-      .slice(0, 10);
-    sendJson(res, 200, { users });
-    return;
+    try {
+      const result = await pool.query(
+        'SELECT name, highscore FROM users ORDER BY highscore DESC, name ASC LIMIT 10'
+      );
+      sendJson(res, 200, { users: result.rows });
+      return;
+    } catch {
+      sendJson(res, 500, { error: 'Datenbankfehler beim Laden der Top-10.' });
+      return;
+    }
   }
 
   if (pathname === '/api/users' && req.method === 'POST') {
@@ -109,17 +114,17 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const users = readUsers();
-      const exists = users.some((user) => user.name.toLowerCase() === name.toLowerCase());
-      if (exists) {
+      const inserted = await pool.query(
+        'INSERT INTO users(name, highscore) VALUES($1, 0) ON CONFLICT DO NOTHING RETURNING name, highscore',
+        [name]
+      );
+
+      if (inserted.rowCount === 0) {
         sendJson(res, 409, { error: 'Username bereits vergeben.' });
         return;
       }
 
-      const user = { name, highscore: 0 };
-      users.push(user);
-      writeUsers(users);
-      sendJson(res, 201, { user });
+      sendJson(res, 201, { user: inserted.rows[0] });
       return;
     } catch {
       sendJson(res, 400, { error: 'Ungültige Anfrage.' });
@@ -129,14 +134,19 @@ const server = http.createServer(async (req, res) => {
 
   const userMatch = pathname.match(/^\/api\/users\/([^/]+)$/);
   if (userMatch && req.method === 'GET') {
-    const name = decodeURIComponent(userMatch[1]);
-    const user = readUsers().find((entry) => entry.name === name);
-    if (!user) {
-      sendJson(res, 404, { error: 'User nicht gefunden.' });
+    try {
+      const name = decodeURIComponent(userMatch[1]);
+      const result = await pool.query('SELECT name, highscore FROM users WHERE name = $1', [name]);
+      if (result.rowCount === 0) {
+        sendJson(res, 404, { error: 'User nicht gefunden.' });
+        return;
+      }
+      sendJson(res, 200, { user: result.rows[0] });
+      return;
+    } catch {
+      sendJson(res, 500, { error: 'Datenbankfehler beim Laden des Users.' });
       return;
     }
-    sendJson(res, 200, { user });
-    return;
   }
 
   const scoreMatch = pathname.match(/^\/api\/users\/([^/]+)\/highscore$/);
@@ -150,19 +160,21 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const users = readUsers();
-      const user = users.find((entry) => entry.name === name);
-      if (!user) {
+      const result = await pool.query(
+        `UPDATE users
+         SET highscore = GREATEST(highscore, $2),
+             updated_at = NOW()
+         WHERE name = $1
+         RETURNING name, highscore`,
+        [name, highscore]
+      );
+
+      if (result.rowCount === 0) {
         sendJson(res, 404, { error: 'User nicht gefunden.' });
         return;
       }
 
-      if (highscore > user.highscore) {
-        user.highscore = highscore;
-        writeUsers(users);
-      }
-
-      sendJson(res, 200, { user });
+      sendJson(res, 200, { user: result.rows[0] });
       return;
     } catch {
       sendJson(res, 400, { error: 'Ungültige Anfrage.' });
@@ -170,7 +182,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  let filePath = pathname === '/' ? path.join(ROOT, 'index.html') : path.join(ROOT, pathname);
+  const filePath = pathname === '/' ? path.join(ROOT, 'index.html') : path.join(ROOT, pathname);
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Forbidden');
@@ -180,6 +192,13 @@ const server = http.createServer(async (req, res) => {
   sendFile(res, filePath);
 });
 
-server.listen(PORT, () => {
-  console.log(`Silentap server running on http://localhost:${PORT}`);
-});
+ensureSchema()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Silentap server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to initialize database schema:', error.message);
+    process.exit(1);
+  });
