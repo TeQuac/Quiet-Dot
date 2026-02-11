@@ -12,11 +12,22 @@
 <body>
   <div id="username-overlay" class="overlay hidden" aria-live="polite">
     <form id="username-form" class="card" novalidate>
-      <h2>Willkommen bei Silentap</h2>
-      <p>Wähle einmalig deinen Usernamen (mind. 3 Zeichen).</p>
+      <h2 id="auth-title">Willkommen bei Silentap</h2>
+      <p id="auth-description">Wähle einen Usernamen und melde dich mit Passwort an.</p>
+      <div class="auth-toggle">
+        <button id="auth-register" type="button">Neuer User</button>
+        <button id="auth-login" type="button" class="secondary">Anmelden</button>
+      </div>
       <label for="username-input">Username</label>
       <input id="username-input" type="text" autocomplete="off" minlength="3" maxlength="16" placeholder="Min. 3 Zeichen" required>
-      <button id="username-save" type="submit">Speichern</button>
+      <label for="password-input">Passwort</label>
+      <input id="password-input" type="password" autocomplete="current-password" minlength="4" maxlength="64" placeholder="Mind. 4 Zeichen" required>
+      <label for="password-confirm" id="password-confirm-label">Passwort wiederholen</label>
+      <input id="password-confirm" type="password" autocomplete="new-password" minlength="4" maxlength="64" placeholder="Passwort wiederholen" required>
+      <div class="auth-actions">
+        <button id="username-save" type="submit">Speichern</button>
+        <button id="auth-cancel" type="button" class="secondary hidden">Abbrechen</button>
+      </div>
       <div id="username-error" class="hidden" role="alert"></div>
     </form>
   </div>
@@ -43,6 +54,7 @@
     </header>
 
     <button id="start-button" type="button">Start</button>
+    <button id="switch-user-button" type="button">Anderen User anmelden</button>
     <button id="feedback-button" type="button">Nachricht an Entwickler</button>
 
     <div id="ticker-mode-label">Top 10 · Normal</div>
