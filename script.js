@@ -14,6 +14,7 @@ const passwordInput = document.getElementById('password-input');
 const passwordConfirmInput = document.getElementById('password-confirm');
 const passwordConfirmLabel = document.getElementById('password-confirm-label');
 const usernameSave = document.getElementById('username-save');
+const authCancelButton = document.getElementById('auth-cancel');
 const usernameError = document.getElementById('username-error');
 const authTitle = document.getElementById('auth-title');
 const authDescription = document.getElementById('auth-description');
@@ -440,13 +441,15 @@ function setAuthMode(mode, options = {}) {
 }
 
 function showUsernameOverlay(options = {}) {
-  const { message = '', mode = 'register', keepValues = false } = options;
+  const { message = '', mode = 'register', keepValues = false, allowCancel = Boolean(currentUser) } = options;
 
   startScreen.classList.add('hidden');
   modeScreen.classList.add('hidden');
   usernameOverlay.classList.remove('hidden');
 
   setAuthMode(mode, options);
+
+  authCancelButton.classList.toggle('hidden', !allowCancel);
 
   if (!keepValues) {
     usernameInput.value = options.username || '';
@@ -485,7 +488,7 @@ async function initUserFlow() {
   const savedUser = localStorage.getItem(storageKeys.currentUser);
 
   if (!savedUser) {
-    showUsernameOverlay({ mode: 'login' });
+    showUsernameOverlay({ mode: 'login', allowCancel: false });
     return;
   }
 
@@ -893,10 +896,17 @@ authLoginButton.addEventListener('click', () => {
   showUsernameOverlay({ mode: 'login' });
 });
 
+authCancelButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  if (!currentUser) return;
+  showStartMenu();
+});
+
 switchUserButton.addEventListener('click', (event) => {
   event.preventDefault();
   event.stopPropagation();
-  showUsernameOverlay({ mode: 'login' });
+  showUsernameOverlay({ mode: 'login', allowCancel: true });
 });
 
 usernameForm.addEventListener('submit', async (event) => {

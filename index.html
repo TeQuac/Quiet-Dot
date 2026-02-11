@@ -24,7 +24,10 @@
       <input id="password-input" type="password" autocomplete="current-password" minlength="4" maxlength="64" placeholder="Mind. 4 Zeichen" required>
       <label for="password-confirm" id="password-confirm-label">Passwort wiederholen</label>
       <input id="password-confirm" type="password" autocomplete="new-password" minlength="4" maxlength="64" placeholder="Passwort wiederholen" required>
-      <button id="username-save" type="submit">Speichern</button>
+      <div class="auth-actions">
+        <button id="username-save" type="submit">Speichern</button>
+        <button id="auth-cancel" type="button" class="secondary hidden">Abbrechen</button>
+      </div>
       <div id="username-error" class="hidden" role="alert"></div>
     </form>
   </div>
