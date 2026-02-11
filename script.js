@@ -20,6 +20,15 @@ const storageKeys = {
   currentUser: 'silentapCurrentUser'
 };
 
+const supabaseConfig = {
+  url: 'https://lwsnfjkgremafzqbhooe.supabase.co',
+  anonKey: 'sb_publishable_BQfkDQVX5WWmW1tECuENyA_r8ppUYNb'
+};
+
+const supabaseClient = window.supabase?.createClient
+  ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
+  : null;
+
 let taps = 0;
 let misses = 0;
 let gameActive = false;
@@ -27,6 +36,8 @@ const maxMisses = 2;
 let currentUser = null;
 let movementAnimation = null;
 let movementState = null;
+let userCache = [];
+let currentUserBest = 0;
 
 const gameElements = [dot, counter, gameHighscore, missesDisplay, donate].filter(Boolean);
 const avoidElements = [counter, gameHighscore, missesDisplay, donate].filter(Boolean);
@@ -46,47 +57,166 @@ function saveUsers(users) {
   localStorage.setItem(storageKeys.users, JSON.stringify(users));
 }
 
-function getUserRecord(name) {
-  return loadUsers().find((user) => user.name === name) || null;
+function normalizeName(name) {
+  return name.trim();
 }
 
-function updateTicker() {
-  const topTen = loadUsers()
+function getUserRecordFromCache(name) {
+  return userCache.find((user) => user.name === name) || null;
+}
+
+function upsertUserCache(name, highscore) {
+  const existing = userCache.find((user) => user.name === name);
+  if (!existing) {
+    userCache.push({ name, highscore });
+  } else {
+    existing.highscore = Math.max(existing.highscore, highscore);
+  }
+
+  saveUsers(userCache);
+}
+
+function getTopTenText(users) {
+  const topTen = users
     .slice()
     .sort((a, b) => b.highscore - a.highscore)
     .slice(0, 10);
 
   if (topTen.length === 0) {
-    highscoreTrack.textContent = 'Noch keine Highscores';
-    return;
+    return 'Noch keine Highscores';
   }
 
   const text = topTen.map((entry, index) => `${index + 1}. ${entry.name} - ${entry.highscore}`).join(' • ');
-  highscoreTrack.textContent = `${text} • ${text}`;
+  return `${text} • ${text}`;
 }
 
-function setCurrentUser(name) {
-  currentUser = name;
-  localStorage.setItem(storageKeys.currentUser, name);
-  const record = getUserRecord(name);
-  if (!record) return;
+async function fetchTopTenRemote() {
+  if (!supabaseClient) return null;
+
+  const { data, error } = await supabaseClient
+    .from('game_scores')
+    .select('username, highscore')
+    .order('highscore', { ascending: false })
+    .order('updated_at', { ascending: true })
+    .limit(10);
+
+  if (error) {
+    console.warn('Top-10 konnte nicht geladen werden:', error.message);
+    return null;
+  }
+
+  return (data || []).map((entry) => ({
+    name: entry.username,
+    highscore: entry.highscore
+  }));
+}
+
+async function fetchUserRemote(name) {
+  if (!supabaseClient) return null;
+
+  const { data, error } = await supabaseClient
+    .from('game_scores')
+    .select('username, highscore')
+    .eq('username', name)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('User konnte nicht geladen werden:', error.message);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    name: data.username,
+    highscore: data.highscore
+  };
+}
+
+async function usernameExistsRemote(name) {
+  if (!supabaseClient) return false;
+
+  const { data, error } = await supabaseClient
+    .from('game_scores')
+    .select('username')
+    .ilike('username', name)
+    .limit(1);
+
+  if (error) {
+    console.warn('Username-Prüfung fehlgeschlagen:', error.message);
+    return false;
+  }
+
+  return (data || []).length > 0;
+}
+
+async function createUserRemote(name) {
+  if (!supabaseClient) return { name, highscore: 0 };
+
+  const { data, error } = await supabaseClient
+    .from('game_scores')
+    .insert({ username: name, highscore: 0 })
+    .select('username, highscore')
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    name: data.username,
+    highscore: data.highscore
+  };
+}
+
+async function submitHighscoreRemote(name, score) {
+  if (!supabaseClient) return score;
+
+  const { data, error } = await supabaseClient
+    .rpc('submit_score', { p_username: name, p_score: score });
+
+  if (error) {
+    console.warn('Highscore konnte nicht gespeichert werden:', error.message);
+    return score;
+  }
+
+  if (!data) return score;
+  return data.highscore;
+}
+
+async function updateTicker() {
+  const remoteTopTen = await fetchTopTenRemote();
+  if (remoteTopTen) {
+    remoteTopTen.forEach((entry) => upsertUserCache(entry.name, entry.highscore));
+    highscoreTrack.textContent = getTopTenText(remoteTopTen);
+    return;
+  }
+
+  highscoreTrack.textContent = getTopTenText(userCache);
+}
+
+function setCurrentUser(record) {
+  currentUser = record.name;
+  currentUserBest = record.highscore;
+  localStorage.setItem(storageKeys.currentUser, record.name);
 
   usernameValue.textContent = record.name;
   userHighscoreValue.textContent = String(record.highscore);
   gameHighscore.textContent = `Highscore: ${record.highscore}`;
 }
 
-function updateCurrentUserHighscore(newScore) {
-  if (!currentUser) return;
-  const users = loadUsers();
-  const record = users.find((user) => user.name === currentUser);
-  if (!record || newScore <= record.highscore) return;
+async function updateCurrentUserHighscore(newScore) {
+  if (!currentUser || newScore <= currentUserBest) return;
 
-  record.highscore = newScore;
-  saveUsers(users);
-  userHighscoreValue.textContent = String(record.highscore);
-  gameHighscore.textContent = `Highscore: ${record.highscore}`;
-  updateTicker();
+  const persistedHighscore = await submitHighscoreRemote(currentUser, newScore);
+  const bestScore = Math.max(newScore, persistedHighscore);
+
+  currentUserBest = bestScore;
+  upsertUserCache(currentUser, bestScore);
+  userHighscoreValue.textContent = String(bestScore);
+  gameHighscore.textContent = `Highscore: ${bestScore}`;
+
+  await updateTicker();
 }
 
 function showStartMenu() {
@@ -109,8 +239,20 @@ function showUsernameOverlay(message = '') {
   startButton.disabled = true;
 }
 
-function initUserFlow() {
-  updateTicker();
+async function resolveSavedUser(savedUser) {
+  const remoteRecord = await fetchUserRemote(savedUser);
+  if (remoteRecord) {
+    upsertUserCache(remoteRecord.name, remoteRecord.highscore);
+    return remoteRecord;
+  }
+
+  return getUserRecordFromCache(savedUser);
+}
+
+async function initUserFlow() {
+  userCache = loadUsers();
+  await updateTicker();
+
   const savedUser = localStorage.getItem(storageKeys.currentUser);
 
   if (!savedUser) {
@@ -118,13 +260,13 @@ function initUserFlow() {
     return;
   }
 
-  const record = getUserRecord(savedUser);
+  const record = await resolveSavedUser(savedUser);
   if (!record) {
     showUsernameOverlay('Gespeicherter User wurde nicht gefunden. Bitte neu wählen.');
     return;
   }
 
-  setCurrentUser(record.name);
+  setCurrentUser(record);
   showStartMenu();
 }
 
@@ -319,26 +461,31 @@ startButton.addEventListener('touchstart', (event) => {
   setGameActive(true);
 }, { passive: false });
 
-usernameForm.addEventListener('submit', (event) => {
+usernameForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const name = usernameInput.value.trim();
+  const name = normalizeName(usernameInput.value);
 
   if (name.length < 3) {
     showUsernameOverlay('Username muss mindestens 3 Zeichen lang sein.');
     return;
   }
 
-  const users = loadUsers();
-  if (users.some((user) => user.name.toLowerCase() === name.toLowerCase())) {
+  const localConflict = userCache.some((user) => user.name.toLowerCase() === name.toLowerCase());
+  const remoteConflict = await usernameExistsRemote(name);
+  if (localConflict || remoteConflict) {
     showUsernameOverlay('Dieser Username ist bereits vergeben.');
     return;
   }
 
-  users.push({ name, highscore: 0 });
-  saveUsers(users);
-  setCurrentUser(name);
-  updateTicker();
-  showStartMenu();
+  try {
+    const createdUser = await createUserRemote(name);
+    upsertUserCache(createdUser.name, createdUser.highscore);
+    setCurrentUser(createdUser);
+    await updateTicker();
+    showStartMenu();
+  } catch {
+    showUsernameOverlay('User konnte nicht gespeichert werden. Bitte versuche es erneut.');
+  }
 });
 
 setGameActive(false);
