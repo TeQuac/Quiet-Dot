@@ -41,6 +41,8 @@ const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
 const modeBackButton = document.getElementById('mode-back');
+const splitHintOverlay = document.getElementById('split-hint-overlay');
+const splitHintCloseButton = document.getElementById('split-hint-close');
 
 const storageKeys = {
   users: 'silentapUsers',
@@ -72,6 +74,7 @@ let currentUser = null;
 let userCache = [];
 let currentMode = 'normal';
 let authMode = 'register';
+let splitSequenceFirstDot = null;
 
 const movementAnimations = new Map();
 const movementStates = new Map();
@@ -404,6 +407,7 @@ function sendFeedbackMail(message) {
 }
 
 function showStartMenu() {
+  closeSplitHint();
   usernameOverlay.classList.add('hidden');
   hideFeedbackOverlay();
   modeScreen.classList.add('hidden');
@@ -519,6 +523,7 @@ function getDotsForMode() {
 
 function setGameActive(active) {
   gameActive = active;
+  splitSequenceFirstDot = null;
 
   alwaysVisibleInGame.forEach((element) => {
     element.classList.toggle('hidden', !active);
@@ -733,23 +738,30 @@ function hitDot() {
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
 }
 
-function getInteractionPoint(event) {
-  const touchPoint = event.touches?.[0] || event.changedTouches?.[0];
-  if (touchPoint) {
-    return {
+function getInteractionPoints(event) {
+  if (event.touches?.length) {
+    return Array.from(event.touches).map((touchPoint) => ({
       x: touchPoint.clientX,
       y: touchPoint.clientY
-    };
+    }));
+  }
+
+  const touchPoint = event.changedTouches?.[0];
+  if (touchPoint) {
+    return [{
+      x: touchPoint.clientX,
+      y: touchPoint.clientY
+    }];
   }
 
   if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
-    return {
+    return [{
       x: event.clientX,
       y: event.clientY
-    };
+    }];
   }
 
-  return null;
+  return [];
 }
 
 function isTapInsideDot(dotElement, point) {
@@ -774,11 +786,34 @@ function handleTap(event) {
   const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #feedback-btn, #feedback-cancel, #feedback-submit');
   if (isControlButton) return;
 
-  const interactionPoint = getInteractionPoint(event);
-  const tappedDot = getDotsForMode().some((dotElement) => isTapInsideDot(dotElement, interactionPoint));
-  if (tappedDot) {
-    hitDot();
-    return;
+  const interactionPoints = getInteractionPoints(event);
+
+  if (currentMode === 'split') {
+    const leftHit = interactionPoints.some((point) => isTapInsideDot(dot, point));
+    const rightHit = interactionPoints.some((point) => isTapInsideDot(dotSplit, point));
+
+    if (leftHit && rightHit) {
+      splitSequenceFirstDot = null;
+    } else if (leftHit || rightHit) {
+      const tappedSide = leftHit ? 'left' : 'right';
+
+      if (!splitSequenceFirstDot) {
+        splitSequenceFirstDot = tappedSide;
+        return;
+      }
+
+      if (splitSequenceFirstDot !== tappedSide) {
+        splitSequenceFirstDot = null;
+        hitDot();
+        return;
+      }
+    }
+  } else {
+    const tappedDot = interactionPoints.some((point) => isTapInsideDot(dot, point));
+    if (tappedDot) {
+      hitDot();
+      return;
+    }
   }
 
   misses++;
@@ -787,12 +822,22 @@ function handleTap(event) {
   if (misses >= maxMisses) {
     taps = 0;
     misses = 0;
+    splitSequenceFirstDot = null;
     counter.textContent = 'Taps: 0';
     missesDisplay.textContent = `Misses: 0/${maxMisses}`;
     resetDotColors();
     resetDots();
     getDotsForMode().forEach((dotElement) => moveDot(dotElement));
   }
+}
+
+
+function closeSplitHint() {
+  splitHintOverlay.classList.add('hidden');
+}
+
+function showSplitHint() {
+  splitHintOverlay.classList.remove('hidden');
 }
 
 function applyMode(mode) {
@@ -842,12 +887,26 @@ modeNormalButton.addEventListener('click', () => {
 
 modeSplitButton.addEventListener('click', () => {
   applyMode('split');
+  showSplitHint();
   setGameActive(true);
 });
 
 modeBackButton.addEventListener('click', () => {
   showStartMenu();
 });
+
+
+splitHintCloseButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  closeSplitHint();
+});
+
+splitHintOverlay.addEventListener('click', (event) => {
+  if (event.target === splitHintOverlay) {
+    closeSplitHint();
+  }
+});
+
 
 backToMenu.addEventListener('click', (event) => {
   event.preventDefault();
