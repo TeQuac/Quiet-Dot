@@ -1,28 +1,42 @@
 # Supabase Setup (Silentap)
 
-Wenn bereits URL/Key gesetzt sind, fehlt oft nur noch die RLS-Policy-Konfiguration.
+Wenn der **Split-Mode-Highscore nicht userübergreifend** erscheint, fehlt meist die DB-Erweiterung für den Split-Score.
 
 ## 1) SQL ausführen
 1. Supabase Dashboard → **SQL Editor**
-2. Datei `supabase_hardening.sql` kopieren und komplett ausführen.
+2. Datei `supabase_split_mode.sql` öffnen, komplett kopieren und ausführen.
 
 Damit werden:
-- die Tabelle `game_scores` sichergestellt,
-- die RPC `submit_score` abgesichert,
-- RLS aktiviert,
-- Policies für Lesen + initiales Erstellen gesetzt.
+- Tabelle `game_scores` abgesichert/ergänzt,
+- neue Spalte `split_highscore` ergänzt,
+- RPC `submit_score_mode(...)` angelegt,
+- Trigger für `updated_at` gesetzt,
+- RLS + Policies für Lesen und initiales Erstellen sichergestellt.
 
-## 2) Warum diese Policies?
-- **SELECT erlaubt**: Top-10 kann auf allen Geräten geladen werden.
-- **INSERT nur mit `highscore = 0`**: User-Erstellung bleibt möglich.
-- **Kein UPDATE direkt**: Highscore-Updates laufen über `submit_score`, damit Scores nie sinken.
+
+Hinweis: Die Migration verwendet absichtlich `drop policy if exists ...` + `create policy ...`, damit sie auch auf Postgres-Versionen läuft, die `create policy if not exists` nicht unterstützen.
+
+## 2) App-Logik
+Die App verwendet danach:
+- für **Normal**: `highscore`
+- für **Split**: `split_highscore`
+
+Und sendet Scores über `submit_score_mode(p_username, p_mode, p_score)`.
 
 ## 3) Kurzer Funktionstest
-- Neues Gerät / neues Browserprofil öffnen
-- User anlegen, ein paar Punkte machen
-- Seite auf zweitem Gerät neu laden → Top-10 sollte den Score zeigen
+1. Mit User A im Split-Mode Punkte machen.
+2. Auf zweitem Gerät/Browser mit anderem User starten.
+3. In den Split-Mode wechseln → Top-10 sollte den Split-Score von User A enthalten.
 
-## 4) Fallback-Verhalten in der App
-Die App cached lokal. Wenn Supabase kurzfristig nicht erreichbar ist,
-bleibt die Anzeige lokal sichtbar und wird beim nächsten erfolgreichen Sync
-wieder mit Supabase abgeglichen.
+## 4) Fallback
+Falls die neue RPC noch nicht vorhanden ist, nutzt die App für Normal-Mode automatisch den Legacy-Call `submit_score` als Fallback.
+
+
+## Copy-Paste SQL (direkt)
+Den vollständigen SQL-Code findest du 1:1 in `supabase_split_mode.sql`.
+Für den schnellen Copy/Paste-Flow:
+1. Datei `supabase_split_mode.sql` öffnen.
+2. Alles markieren und kopieren.
+3. In Supabase SQL Editor einfügen und ausführen.
+
+Tipp: Wenn bereits Daten existieren, ist das Skript idempotent ausgelegt (`if not exists`, `drop ... if exists`).

@@ -163,12 +163,14 @@ function renderTicker(users, mode) {
 }
 
 async function fetchTopTenRemote() {
-  if (!supabaseClient || currentMode !== 'normal') return null;
+  if (!supabaseClient) return null;
+
+  const scoreColumn = currentMode === 'split' ? 'split_highscore' : 'highscore';
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore')
-    .order('highscore', { ascending: false })
+    .select('username, highscore, split_highscore')
+    .order(scoreColumn, { ascending: false })
     .order('updated_at', { ascending: true })
     .limit(10);
 
@@ -179,7 +181,7 @@ async function fetchTopTenRemote() {
 
   return (data || []).map((entry) => ensureUserRecordShape({
     name: entry.username,
-    highscores: { normal: entry.highscore, split: 0 }
+    highscores: { normal: entry.highscore, split: entry.split_highscore }
   }));
 }
 
@@ -188,7 +190,7 @@ async function fetchUserRemote(name) {
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore')
+    .select('username, highscore, split_highscore')
     .eq('username', name)
     .maybeSingle();
 
@@ -201,7 +203,7 @@ async function fetchUserRemote(name) {
 
   return ensureUserRecordShape({
     name: data.username,
-    highscores: { normal: data.highscore, split: 0 }
+    highscores: { normal: data.highscore, split: data.split_highscore }
   });
 }
 
@@ -227,8 +229,8 @@ async function createUserRemote(name) {
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .insert({ username: name, highscore: 0 })
-    .select('username, highscore')
+    .insert({ username: name, highscore: 0, split_highscore: 0 })
+    .select('username, highscore, split_highscore')
     .single();
 
   if (error) {
@@ -237,29 +239,52 @@ async function createUserRemote(name) {
 
   return ensureUserRecordShape({
     name: data.username,
-    highscores: { normal: data.highscore, split: 0 }
+    highscores: { normal: data.highscore, split: data.split_highscore }
   });
 }
 
-async function submitHighscoreRemote(name, score) {
-  if (!supabaseClient || currentMode !== 'normal') return score;
+function extractPersistedScore(result, mode, fallbackScore) {
+  if (!result || typeof result !== 'object') return fallbackScore;
+
+  const modeKey = mode === 'split' ? 'split_highscore' : 'highscore';
+  if (typeof result[modeKey] === 'number') return result[modeKey];
+  if (typeof result.highscore === 'number' && mode === 'normal') return result.highscore;
+  if (typeof result.split_highscore === 'number' && mode === 'split') return result.split_highscore;
+  return fallbackScore;
+}
+
+async function submitHighscoreRemote(name, score, mode) {
+  if (!supabaseClient) return score;
 
   const { data, error } = await supabaseClient
-    .rpc('submit_score', { p_username: name, p_score: score });
+    .rpc('submit_score_mode', { p_username: name, p_mode: mode, p_score: score });
 
-  if (error) {
-    console.warn('Highscore konnte nicht gespeichert werden:', error.message);
-    return score;
+  if (!error) {
+    if (!data) return score;
+    return extractPersistedScore(data, mode, score);
   }
 
-  if (!data) return score;
-  return data.highscore;
+  if (mode === 'normal') {
+    const legacy = await supabaseClient
+      .rpc('submit_score', { p_username: name, p_score: score });
+
+    if (!legacy.error) {
+      if (!legacy.data) return score;
+      return extractPersistedScore(legacy.data, mode, score);
+    }
+  }
+
+  console.warn('Highscore konnte nicht gespeichert werden:', error.message);
+  return score;
 }
 
 async function updateTicker() {
   const remoteTopTen = await fetchTopTenRemote();
   if (remoteTopTen) {
-    remoteTopTen.forEach((entry) => upsertUserCache(entry.name, 'normal', getScore(entry, 'normal')));
+    remoteTopTen.forEach((entry) => {
+      upsertUserCache(entry.name, 'normal', getScore(entry, 'normal'));
+      upsertUserCache(entry.name, 'split', getScore(entry, 'split'));
+    });
     renderTicker(remoteTopTen, currentMode);
     return;
   }
@@ -306,7 +331,12 @@ async function updateCurrentUserHighscore(newScore) {
 
   let bestScore = newScore;
   if (currentMode === 'normal') {
-    const persistedHighscore = await submitHighscoreRemote(currentUser, newScore);
+    const persistedHighscore = await submitHighscoreRemote(currentUser, newScore, currentMode);
+    bestScore = Math.max(newScore, persistedHighscore);
+  }
+
+  if (currentMode === 'split') {
+    const persistedHighscore = await submitHighscoreRemote(currentUser, newScore, currentMode);
     bestScore = Math.max(newScore, persistedHighscore);
   }
 
