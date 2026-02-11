@@ -24,17 +24,30 @@
   <div id="start-screen" class="hidden">
     <header id="start-header">
       <div id="username-label"><span id="username-value"></span></div>
-      <div id="user-highscore">Highscore: <span id="user-highscore-value">0</span></div>
+      <div id="user-highscore">Normal: <span id="user-highscore-normal">0</span> | Split: <span id="user-highscore-split">0</span></div>
     </header>
 
     <button id="start-button" type="button">Start</button>
 
+    <div id="ticker-mode-label">Top 10 · Normal</div>
     <div id="highscore-ticker" aria-label="Top 10 Highscores">
       <div id="highscore-track"></div>
     </div>
   </div>
 
+  <div id="mode-screen" class="hidden" aria-live="polite">
+    <div class="card mode-card">
+      <h2>Spielmodus wählen</h2>
+      <p>Normal: Ein Punkt über das ganze Feld.<br>Split: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.</p>
+      <button id="mode-normal" type="button">Normal</button>
+      <button id="mode-split" type="button">Split</button>
+      <button id="mode-back" type="button" class="secondary">Zurück</button>
+    </div>
+  </div>
+
+  <div id="split-divider" class="hidden" hidden></div>
   <div id="dot" class="hidden" hidden></div>
+  <div id="dot-split" class="hidden" hidden></div>
   <div id="counter" class="hidden" hidden>Taps: 0</div>
   <div id="game-highscore" class="hidden" hidden>Highscore: 0</div>
   <div id="misses" class="hidden" hidden>Misses: 0/2</div>
