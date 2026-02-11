@@ -8,12 +8,16 @@ create table if not exists public.game_scores (
   username text not null unique,
   highscore integer not null default 0 check (highscore >= 0),
   split_highscore integer not null default 0 check (split_highscore >= 0),
+  password_hash text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.game_scores
   add column if not exists split_highscore integer not null default 0 check (split_highscore >= 0);
+
+alter table public.game_scores
+  add column if not exists password_hash text;
 
 alter table public.game_scores
   add column if not exists created_at timestamptz not null default now();
@@ -104,5 +108,17 @@ on public.game_scores
 for insert
 to anon, authenticated
 with check (highscore = 0 and split_highscore = 0);
+
+
+drop policy if exists "game_scores_update_password" on public.game_scores;
+create policy "game_scores_update_password"
+on public.game_scores
+for update
+to anon, authenticated
+using (true)
+with check (
+  highscore >= 0
+  and split_highscore >= 0
+);
 
 commit;

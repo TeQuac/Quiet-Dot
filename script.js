@@ -10,7 +10,15 @@ const backToMenu = document.getElementById('back-to-menu');
 const usernameOverlay = document.getElementById('username-overlay');
 const usernameForm = document.getElementById('username-form');
 const usernameInput = document.getElementById('username-input');
+const passwordInput = document.getElementById('password-input');
+const passwordConfirmInput = document.getElementById('password-confirm');
+const passwordConfirmLabel = document.getElementById('password-confirm-label');
+const usernameSave = document.getElementById('username-save');
 const usernameError = document.getElementById('username-error');
+const authTitle = document.getElementById('auth-title');
+const authDescription = document.getElementById('auth-description');
+const authRegisterButton = document.getElementById('auth-register');
+const authLoginButton = document.getElementById('auth-login');
 
 const feedbackOverlay = document.getElementById('feedback-overlay');
 const feedbackButton = document.getElementById('feedback-button');
@@ -21,6 +29,7 @@ const feedbackError = document.getElementById('feedback-error');
 
 const startScreen = document.getElementById('start-screen');
 const startButton = document.getElementById('start-button');
+const switchUserButton = document.getElementById('switch-user-button');
 const usernameValue = document.getElementById('username-value');
 const userHighscoreNormal = document.getElementById('user-highscore-normal');
 const userHighscoreSplit = document.getElementById('user-highscore-split');
@@ -61,6 +70,7 @@ const maxMisses = 2;
 let currentUser = null;
 let userCache = [];
 let currentMode = 'normal';
+let authMode = 'register';
 
 const movementAnimations = new Map();
 const movementStates = new Map();
@@ -185,13 +195,39 @@ async function fetchTopTenRemote() {
   }));
 }
 
+async function hashPassword(password) {
+  const normalized = password.trim();
+  if (!normalized) return '';
+
+  if (window.crypto?.subtle) {
+    const data = new TextEncoder().encode(normalized);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  return normalized;
+}
+
+function shapeRemoteUser(entry) {
+  if (!entry) return null;
+
+  return {
+    record: ensureUserRecordShape({
+      name: entry.username,
+      highscores: { normal: entry.highscore, split: entry.split_highscore }
+    }),
+    passwordHash: entry.password_hash || null
+  };
+}
+
 async function fetchUserRemote(name) {
   if (!supabaseClient) return null;
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore')
-    .eq('username', name)
+    .select('username, highscore, split_highscore, password_hash')
+    .ilike('username', name)
+    .limit(1)
     .maybeSingle();
 
   if (error) {
@@ -199,48 +235,45 @@ async function fetchUserRemote(name) {
     return null;
   }
 
-  if (!data) return null;
-
-  return ensureUserRecordShape({
-    name: data.username,
-    highscores: { normal: data.highscore, split: data.split_highscore }
-  });
+  return shapeRemoteUser(data);
 }
 
-async function usernameExistsRemote(name) {
-  if (!supabaseClient) return false;
+async function createUserRemote(name, passwordHash) {
+  if (!supabaseClient) return { record: ensureUserRecordShape({ name }), passwordHash };
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username')
-    .ilike('username', name)
-    .limit(1);
-
-  if (error) {
-    console.warn('Username-Prüfung fehlgeschlagen:', error.message);
-    return false;
-  }
-
-  return (data || []).length > 0;
-}
-
-async function createUserRemote(name) {
-  if (!supabaseClient) return ensureUserRecordShape({ name });
-
-  const { data, error } = await supabaseClient
-    .from('game_scores')
-    .insert({ username: name, highscore: 0, split_highscore: 0 })
-    .select('username, highscore, split_highscore')
+    .insert({ username: name, highscore: 0, split_highscore: 0, password_hash: passwordHash })
+    .select('username, highscore, split_highscore, password_hash')
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return ensureUserRecordShape({
-    name: data.username,
-    highscores: { normal: data.highscore, split: data.split_highscore }
-  });
+  return shapeRemoteUser(data);
+}
+
+async function setUserPasswordRemote(name, passwordHash) {
+  if (!supabaseClient) return { record: ensureUserRecordShape({ name }), passwordHash };
+
+  const { data, error } = await supabaseClient
+    .from('game_scores')
+    .update({ password_hash: passwordHash })
+    .ilike('username', name)
+    .is('password_hash', null)
+    .select('username, highscore, split_highscore, password_hash')
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (data) return shapeRemoteUser(data);
+
+  const existing = await fetchUserRemote(name);
+  if (!existing) throw new Error('User nicht gefunden.');
+  return existing;
 }
 
 function extractPersistedScore(result, mode, fallbackScore) {
@@ -385,11 +418,42 @@ function showModeScreen() {
   updateModeButtons();
 }
 
-function showUsernameOverlay(message = '') {
+function setAuthMode(mode, options = {}) {
+  authMode = mode;
+  const isRegister = mode === 'register';
+
+  authTitle.textContent = options.title || (isRegister ? 'Willkommen bei Silentap' : 'Bei Silentap anmelden');
+  authDescription.textContent = options.description || (isRegister
+    ? 'Wähle einen Usernamen und melde dich mit Passwort an.'
+    : 'Melde dich mit Username und Passwort an.');
+
+  authRegisterButton.classList.toggle('active', isRegister);
+  authLoginButton.classList.toggle('active', !isRegister);
+
+  usernameForm.dataset.mode = mode;
+  usernameSave.textContent = isRegister ? 'Registrieren' : 'Anmelden';
+
+  passwordConfirmInput.classList.toggle('hidden', !isRegister);
+  passwordConfirmLabel.classList.toggle('hidden', !isRegister);
+  passwordConfirmInput.required = isRegister;
+  passwordInput.autocomplete = isRegister ? 'new-password' : 'current-password';
+}
+
+function showUsernameOverlay(options = {}) {
+  const { message = '', mode = 'register', keepValues = false } = options;
+
   startScreen.classList.add('hidden');
   modeScreen.classList.add('hidden');
   usernameOverlay.classList.remove('hidden');
-  usernameInput.value = '';
+
+  setAuthMode(mode, options);
+
+  if (!keepValues) {
+    usernameInput.value = options.username || '';
+    passwordInput.value = '';
+    passwordConfirmInput.value = '';
+  }
+
   if (message) {
     usernameError.textContent = message;
     usernameError.classList.remove('hidden');
@@ -397,17 +461,21 @@ function showUsernameOverlay(message = '') {
     usernameError.textContent = '';
     usernameError.classList.add('hidden');
   }
+
   startButton.disabled = true;
 }
 
 async function resolveSavedUser(savedUser) {
-  const remoteRecord = await fetchUserRemote(savedUser);
-  if (remoteRecord) {
-    upsertUserCache(remoteRecord.name, 'normal', getScore(remoteRecord, 'normal'));
-    return getUserRecordFromCache(savedUser);
+  const remoteUser = await fetchUserRemote(savedUser);
+  if (remoteUser) {
+    upsertUserCache(remoteUser.record.name, 'normal', getScore(remoteUser.record, 'normal'));
+    upsertUserCache(remoteUser.record.name, 'split', getScore(remoteUser.record, 'split'));
+    return remoteUser;
   }
 
-  return getUserRecordFromCache(savedUser);
+  const localRecord = getUserRecordFromCache(savedUser);
+  if (!localRecord) return null;
+  return { record: localRecord, passwordHash: null };
 }
 
 async function initUserFlow() {
@@ -417,17 +485,28 @@ async function initUserFlow() {
   const savedUser = localStorage.getItem(storageKeys.currentUser);
 
   if (!savedUser) {
-    showUsernameOverlay();
+    showUsernameOverlay({ mode: 'login' });
     return;
   }
 
-  const record = await resolveSavedUser(savedUser);
-  if (!record) {
-    showUsernameOverlay('Gespeicherter User wurde nicht gefunden. Bitte neu wählen.');
+  const resolved = await resolveSavedUser(savedUser);
+  if (!resolved) {
+    showUsernameOverlay({ mode: 'login', message: 'Gespeicherter User wurde nicht gefunden. Bitte neu anmelden.' });
     return;
   }
 
-  setCurrentUser(record);
+  if (!resolved.passwordHash) {
+    showUsernameOverlay({
+      mode: 'register',
+      username: resolved.record.name,
+      title: 'Passwort festlegen',
+      description: 'Dieser bestehende User benötigt einmalig ein Passwort für künftige Anmeldungen.',
+      message: 'Bitte Passwort festlegen.'
+    });
+    return;
+  }
+
+  setCurrentUser(resolved.record);
   showStartMenu();
 }
 
@@ -806,31 +885,91 @@ feedbackForm.addEventListener('submit', (event) => {
   hideFeedbackOverlay();
 });
 
+authRegisterButton.addEventListener('click', () => {
+  showUsernameOverlay({ mode: 'register' });
+});
+
+authLoginButton.addEventListener('click', () => {
+  showUsernameOverlay({ mode: 'login' });
+});
+
+switchUserButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  showUsernameOverlay({ mode: 'login' });
+});
+
 usernameForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+
   const name = normalizeName(usernameInput.value);
+  const password = passwordInput.value.trim();
+  const confirmPassword = passwordConfirmInput.value.trim();
+  const mode = usernameForm.dataset.mode || authMode;
 
   if (name.length < 3) {
-    showUsernameOverlay('Username muss mindestens 3 Zeichen lang sein.');
+    showUsernameOverlay({ mode, message: 'Username muss mindestens 3 Zeichen lang sein.', keepValues: true });
     return;
   }
 
-  const localConflict = userCache.some((user) => user.name.toLowerCase() === name.toLowerCase());
-  const remoteConflict = await usernameExistsRemote(name);
-  if (localConflict || remoteConflict) {
-    showUsernameOverlay('Dieser Username ist bereits vergeben.');
+  if (password.length < 4) {
+    showUsernameOverlay({ mode, message: 'Passwort muss mindestens 4 Zeichen lang sein.', keepValues: true });
+    return;
+  }
+
+  const passwordHash = await hashPassword(password);
+
+  if (mode === 'register') {
+    if (password !== confirmPassword) {
+      showUsernameOverlay({ mode, message: 'Passwörter stimmen nicht überein.', keepValues: true });
+      return;
+    }
+
+    const remoteUser = await fetchUserRemote(name);
+    if (remoteUser?.passwordHash) {
+      showUsernameOverlay({ mode, message: 'Dieser Username ist bereits vergeben.', keepValues: true });
+      return;
+    }
+
+    try {
+      const authUser = remoteUser && !remoteUser.passwordHash
+        ? await setUserPasswordRemote(name, passwordHash)
+        : await createUserRemote(name, passwordHash);
+
+      upsertUserCache(authUser.record.name, 'normal', getScore(authUser.record, 'normal'));
+      upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
+      setCurrentUser(authUser.record);
+      await updateTicker();
+      showStartMenu();
+    } catch {
+      showUsernameOverlay({ mode, message: 'User konnte nicht gespeichert werden. Bitte versuche es erneut.', keepValues: true });
+    }
+
+    return;
+  }
+
+  const remoteUser = await fetchUserRemote(name);
+  if (!remoteUser) {
+    showUsernameOverlay({ mode, message: 'User nicht gefunden. Bitte registrieren.', keepValues: true });
     return;
   }
 
   try {
-    const createdUser = await createUserRemote(name);
-    upsertUserCache(createdUser.name, 'normal', getScore(createdUser, 'normal'));
-    upsertUserCache(createdUser.name, 'split', getScore(createdUser, 'split'));
-    setCurrentUser(getUserRecordFromCache(createdUser.name) || createdUser);
+    let authUser = remoteUser;
+    if (!remoteUser.passwordHash) {
+      authUser = await setUserPasswordRemote(name, passwordHash);
+    } else if (remoteUser.passwordHash !== passwordHash) {
+      showUsernameOverlay({ mode, message: 'Passwort ist nicht korrekt.', keepValues: true });
+      return;
+    }
+
+    upsertUserCache(authUser.record.name, 'normal', getScore(authUser.record, 'normal'));
+    upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
+    setCurrentUser(authUser.record);
     await updateTicker();
     showStartMenu();
   } catch {
-    showUsernameOverlay('User konnte nicht gespeichert werden. Bitte versuche es erneut.');
+    showUsernameOverlay({ mode, message: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.', keepValues: true });
   }
 });
 
