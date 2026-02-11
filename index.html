@@ -63,6 +63,35 @@
     </div>
   </div>
 
+
+
+  <div id="split-hint-overlay" class="overlay hidden" aria-live="polite">
+    <div class="card split-hint-card" role="dialog" aria-modal="true" aria-labelledby="split-hint-title">
+      <h2 id="split-hint-title">Split-Modus Wertung</h2>
+      <p>Ein Punkt zählt nur, wenn <strong>beide</strong> Punkte gleichzeitig getroffen werden.</p>
+      <div class="split-hint-visual" aria-hidden="true">
+        <div class="hint-row success">
+          <span class="hint-label">✅ zählt</span>
+          <div class="hint-lane">
+            <span class="hint-dot left"></span>
+            <span class="hint-dot right"></span>
+            <span class="hint-touch left"></span>
+            <span class="hint-touch right"></span>
+          </div>
+        </div>
+        <div class="hint-row fail">
+          <span class="hint-label">❌ zählt nicht</span>
+          <div class="hint-lane">
+            <span class="hint-dot left"></span>
+            <span class="hint-dot right"></span>
+            <span class="hint-touch left"></span>
+          </div>
+        </div>
+      </div>
+      <button id="split-hint-close" type="button">Verstanden</button>
+    </div>
+  </div>
+
   <div id="mode-screen" class="hidden" aria-live="polite">
     <div class="card mode-card">
       <h2>Spielmodus wählen</h2>

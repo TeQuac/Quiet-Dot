@@ -41,6 +41,8 @@ const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
 const modeBackButton = document.getElementById('mode-back');
+const splitHintOverlay = document.getElementById('split-hint-overlay');
+const splitHintCloseButton = document.getElementById('split-hint-close');
 
 const storageKeys = {
   users: 'silentapUsers',
@@ -404,6 +406,7 @@ function sendFeedbackMail(message) {
 }
 
 function showStartMenu() {
+  closeSplitHint();
   usernameOverlay.classList.add('hidden');
   hideFeedbackOverlay();
   modeScreen.classList.add('hidden');
@@ -733,23 +736,30 @@ function hitDot() {
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
 }
 
-function getInteractionPoint(event) {
-  const touchPoint = event.touches?.[0] || event.changedTouches?.[0];
-  if (touchPoint) {
-    return {
+function getInteractionPoints(event) {
+  if (event.touches?.length) {
+    return Array.from(event.touches).map((touchPoint) => ({
       x: touchPoint.clientX,
       y: touchPoint.clientY
-    };
+    }));
+  }
+
+  const touchPoint = event.changedTouches?.[0];
+  if (touchPoint) {
+    return [{
+      x: touchPoint.clientX,
+      y: touchPoint.clientY
+    }];
   }
 
   if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
-    return {
+    return [{
       x: event.clientX,
       y: event.clientY
-    };
+    }];
   }
 
-  return null;
+  return [];
 }
 
 function isTapInsideDot(dotElement, point) {
@@ -774,8 +784,8 @@ function handleTap(event) {
   const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #feedback-btn, #feedback-cancel, #feedback-submit');
   if (isControlButton) return;
 
-  const interactionPoint = getInteractionPoint(event);
-  const tappedDot = getDotsForMode().some((dotElement) => isTapInsideDot(dotElement, interactionPoint));
+  const interactionPoints = getInteractionPoints(event);
+  const tappedDot = getDotsForMode().every((dotElement) => interactionPoints.some((point) => isTapInsideDot(dotElement, point)));
   if (tappedDot) {
     hitDot();
     return;
@@ -793,6 +803,15 @@ function handleTap(event) {
     resetDots();
     getDotsForMode().forEach((dotElement) => moveDot(dotElement));
   }
+}
+
+
+function closeSplitHint() {
+  splitHintOverlay.classList.add('hidden');
+}
+
+function showSplitHint() {
+  splitHintOverlay.classList.remove('hidden');
 }
 
 function applyMode(mode) {
@@ -842,12 +861,26 @@ modeNormalButton.addEventListener('click', () => {
 
 modeSplitButton.addEventListener('click', () => {
   applyMode('split');
+  showSplitHint();
   setGameActive(true);
 });
 
 modeBackButton.addEventListener('click', () => {
   showStartMenu();
 });
+
+
+splitHintCloseButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  closeSplitHint();
+});
+
+splitHintOverlay.addEventListener('click', (event) => {
+  if (event.target === splitHintOverlay) {
+    closeSplitHint();
+  }
+});
+
 
 backToMenu.addEventListener('click', (event) => {
   event.preventDefault();
