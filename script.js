@@ -621,16 +621,53 @@ function hitDot() {
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
 }
 
+function getInteractionPoint(event) {
+  const touchPoint = event.touches?.[0] || event.changedTouches?.[0];
+  if (touchPoint) {
+    return {
+      x: touchPoint.clientX,
+      y: touchPoint.clientY
+    };
+  }
+
+  if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
+    return {
+      x: event.clientX,
+      y: event.clientY
+    };
+  }
+
+  return null;
+}
+
+function isTapInsideDot(dotElement, point) {
+  if (!dotElement || dotElement.hidden || dotElement.classList.contains('hidden')) return false;
+  if (!point) return false;
+
+  const rect = dotElement.getBoundingClientRect();
+  const centerX = rect.left + (rect.width / 2);
+  const centerY = rect.top + (rect.height / 2);
+  const radius = rect.width / 2;
+
+  const deltaX = point.x - centerX;
+  const deltaY = point.y - centerY;
+
+  return Math.hypot(deltaX, deltaY) <= radius;
+}
+
 function handleTap(event) {
   if (!gameActive) return;
 
   const target = event.target;
-  if (target === dot || target === dotSplit) {
+  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #feedback-btn, #feedback-cancel, #feedback-submit');
+  if (isControlButton) return;
+
+  const interactionPoint = getInteractionPoint(event);
+  const tappedDot = getDotsForMode().some((dotElement) => isTapInsideDot(dotElement, interactionPoint));
+  if (tappedDot) {
     hitDot();
     return;
   }
-
-  if (target === donate || target === backToMenu) return;
 
   misses++;
   missesDisplay.textContent = `Misses: ${misses}/${maxMisses}`;
