@@ -3,6 +3,7 @@ const counter = document.getElementById('counter');
 const gameHighscore = document.getElementById('game-highscore');
 const missesDisplay = document.getElementById('misses');
 const donate = document.getElementById('donate');
+const backToMenu = document.getElementById('back-to-menu');
 
 const usernameOverlay = document.getElementById('username-overlay');
 const usernameForm = document.getElementById('username-form');
@@ -38,9 +39,23 @@ let movementAnimation = null;
 let movementState = null;
 let userCache = [];
 let currentUserBest = 0;
+const warmDotColors = [
+  '#1f2937',
+  '#8b5e3c',
+  '#a05d4e',
+  '#b66a50',
+  '#c9785a',
+  '#d08a62',
+  '#9f7a57',
+  '#c17f59',
+  '#b5835a',
+  '#7a5c4a',
+  '#94624e'
+];
+let currentDotColorIndex = 0;
 
-const gameElements = [dot, counter, gameHighscore, missesDisplay, donate].filter(Boolean);
-const avoidElements = [counter, gameHighscore, missesDisplay, donate].filter(Boolean);
+const gameElements = [dot, counter, gameHighscore, missesDisplay, donate, backToMenu].filter(Boolean);
+const avoidElements = [counter, gameHighscore, missesDisplay, donate, backToMenu].filter(Boolean);
 
 function loadUsers() {
   const stored = localStorage.getItem(storageKeys.users);
@@ -76,18 +91,37 @@ function upsertUserCache(name, highscore) {
   saveUsers(userCache);
 }
 
-function getTopTenText(users) {
+function getTopTenEntries(users) {
   const topTen = users
     .slice()
     .sort((a, b) => b.highscore - a.highscore)
     .slice(0, 10);
 
-  if (topTen.length === 0) {
-    return 'Noch keine Highscores';
+  return topTen;
+}
+
+function getEntryClass(index) {
+  if (index === 0) return 'rank-1';
+  if (index === 1) return 'rank-2';
+  if (index === 2) return 'rank-3';
+  return '';
+}
+
+function renderTicker(users) {
+  const entries = getTopTenEntries(users);
+  if (entries.length === 0) {
+    highscoreTrack.textContent = 'Noch keine Highscores';
+    return;
   }
 
-  const text = topTen.map((entry, index) => `${index + 1}. ${entry.name} - ${entry.highscore}`).join(' • ');
-  return `${text} • ${text}`;
+  const tickerItems = entries
+    .map((entry, index) => {
+      const rankClass = getEntryClass(index);
+      return `<span class="ticker-entry ${rankClass}">${index + 1}. ${entry.name} - ${entry.highscore}</span>`;
+    })
+    .join('<span aria-hidden="true">•</span>');
+
+  highscoreTrack.innerHTML = `<div class="ticker-content">${tickerItems}<span aria-hidden="true">•</span>${tickerItems}</div>`;
 }
 
 async function fetchTopTenRemote() {
@@ -188,11 +222,24 @@ async function updateTicker() {
   const remoteTopTen = await fetchTopTenRemote();
   if (remoteTopTen) {
     remoteTopTen.forEach((entry) => upsertUserCache(entry.name, entry.highscore));
-    highscoreTrack.textContent = getTopTenText(remoteTopTen);
+    renderTicker(remoteTopTen);
     return;
   }
 
-  highscoreTrack.textContent = getTopTenText(userCache);
+  renderTicker(userCache);
+}
+
+function updateDotColorByTaps() {
+  const nextColorIndex = Math.floor(taps / 10) % warmDotColors.length;
+  if (nextColorIndex === currentDotColorIndex) return;
+
+  currentDotColorIndex = nextColorIndex;
+  dot.style.backgroundColor = warmDotColors[currentDotColorIndex];
+}
+
+function resetDotColor() {
+  currentDotColorIndex = 0;
+  dot.style.backgroundColor = warmDotColors[currentDotColorIndex];
 }
 
 function setCurrentUser(record) {
@@ -283,6 +330,7 @@ function setGameActive(active) {
     misses = 0;
     counter.textContent = 'Taps: 0';
     missesDisplay.textContent = `Misses: 0/${maxMisses}`;
+    resetDotColor();
     resetDot();
   } else if (movementAnimation) {
     cancelAnimationFrame(movementAnimation);
@@ -413,6 +461,7 @@ function resetDot() {
 function hitDot() {
   taps++;
   counter.textContent = `Taps: ${taps}`;
+  updateDotColorByTaps();
   updateCurrentUserHighscore(taps);
   moveDot();
 }
@@ -426,7 +475,7 @@ function handleTap(event) {
     return;
   }
 
-  if (target === donate) return;
+  if (target === donate || target === backToMenu) return;
 
   misses++;
   missesDisplay.textContent = `Misses: ${misses}/${maxMisses}`;
@@ -436,6 +485,7 @@ function handleTap(event) {
     misses = 0;
     counter.textContent = 'Taps: 0';
     missesDisplay.textContent = `Misses: 0/${maxMisses}`;
+    resetDotColor();
     resetDot();
   }
 }
@@ -459,6 +509,18 @@ startButton.addEventListener('touchstart', (event) => {
   event.stopPropagation();
   if (!currentUser) return;
   setGameActive(true);
+}, { passive: false });
+
+backToMenu.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setGameActive(false);
+});
+
+backToMenu.addEventListener('touchstart', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setGameActive(false);
 }, { passive: false });
 
 usernameForm.addEventListener('submit', async (event) => {
