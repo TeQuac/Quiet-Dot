@@ -376,6 +376,11 @@ a {
   z-index: 10;
 }
 
+#dot.split-target,
+#dot-split.split-target {
+  box-shadow: 0 0 0 4px #d4af37, 0 0 14px rgba(212, 175, 55, 0.55);
+}
+
 #counter,
 #game-highscore,
 #misses {

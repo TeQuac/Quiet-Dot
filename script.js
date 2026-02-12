@@ -80,7 +80,7 @@ let userCache = [];
 let currentMode = 'normal';
 let selectedHighscoreMode = 'normal';
 let authMode = 'register';
-let splitSequenceFirstDot = null;
+let splitSequenceLastTappedSide = null;
 
 const movementAnimations = new Map();
 const movementStates = new Map();
@@ -587,7 +587,7 @@ function getDotsForMode() {
 
 function setGameActive(active) {
   gameActive = active;
-  splitSequenceFirstDot = null;
+  splitSequenceLastTappedSide = null;
 
   alwaysVisibleInGame.forEach((element) => {
     element.classList.toggle('hidden', !active);
@@ -614,6 +614,7 @@ function setGameActive(active) {
     gameHighscore.textContent = `Highscore (${gameModes[currentMode].label}): ${getScore(getUserRecordFromCache(currentUser), currentMode)}`;
     resetDotColors();
     resetDots();
+    updateSplitTargetHighlight();
     getDotsForMode().forEach((dotElement) => moveDot(dotElement));
   } else {
     stopAllMovement();
@@ -622,6 +623,24 @@ function setGameActive(active) {
     dotSplit.classList.add('hidden');
     dotSplit.hidden = true;
   }
+}
+
+function updateSplitTargetHighlight() {
+  if (currentMode !== 'split' || !gameActive) {
+    dot.classList.remove('split-target');
+    dotSplit.classList.remove('split-target');
+    return;
+  }
+
+  if (!splitSequenceLastTappedSide) {
+    dot.classList.remove('split-target');
+    dotSplit.classList.remove('split-target');
+    return;
+  }
+
+  const nextTargetIsLeft = splitSequenceLastTappedSide === 'right';
+  dot.classList.toggle('split-target', nextTargetIsLeft);
+  dotSplit.classList.toggle('split-target', !nextTargetIsLeft);
 }
 
 function getDotPosition(dotElement) {
@@ -857,20 +876,21 @@ function handleTap(event) {
     const rightHit = interactionPoints.some((point) => isTapInsideDot(dotSplit, point));
 
     if (leftHit && rightHit) {
-      splitSequenceFirstDot = null;
+      return;
     } else if (leftHit || rightHit) {
       const tappedSide = leftHit ? 'left' : 'right';
+      const hasPreviousTap = Boolean(splitSequenceLastTappedSide);
+      const switchedSide = hasPreviousTap && splitSequenceLastTappedSide !== tappedSide;
 
-      if (!splitSequenceFirstDot) {
-        splitSequenceFirstDot = tappedSide;
-        return;
-      }
+      splitSequenceLastTappedSide = tappedSide;
+      updateSplitTargetHighlight();
 
-      if (splitSequenceFirstDot !== tappedSide) {
-        splitSequenceFirstDot = null;
+      if (switchedSide) {
         hitDot();
         return;
       }
+
+      return;
     }
   } else {
     const tappedDot = interactionPoints.some((point) => isTapInsideDot(dot, point));
@@ -886,11 +906,12 @@ function handleTap(event) {
   if (misses >= maxMisses) {
     taps = 0;
     misses = 0;
-    splitSequenceFirstDot = null;
+    splitSequenceLastTappedSide = null;
     counter.textContent = 'Taps: 0';
     missesDisplay.textContent = `Misses: 0/${maxMisses}`;
     resetDotColors();
     resetDots();
+    updateSplitTargetHighlight();
     getDotsForMode().forEach((dotElement) => moveDot(dotElement));
   }
 }
@@ -906,6 +927,8 @@ function showSplitHint() {
 
 function applyMode(mode) {
   currentMode = mode;
+  splitSequenceLastTappedSide = null;
+  updateSplitTargetHighlight();
   updateModeButtons();
   updateCurrentUserHighscoreDisplay();
   void updateTicker();
