@@ -436,9 +436,15 @@ a {
 #new-highscore {
   left: 50%;
   transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
   font-size: 24px;
   font-weight: 800;
   color: #b33b00;
+  background: rgba(255, 245, 228, 0.95);
+  border: 1px solid #f1c38f;
+  box-shadow: 0 8px 20px rgba(167, 89, 25, 0.24);
+  animation: wobbleHighscore 0.55s ease-in-out infinite;
 }
 
 #try-again {
