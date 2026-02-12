@@ -933,6 +933,10 @@ function showMissIndicator(point) {
   missIndicator.classList.remove('hidden');
   missIndicator.hidden = false;
 
+  missIndicator.style.animation = 'none';
+  void missIndicator.offsetWidth;
+  missIndicator.style.animation = '';
+
   if (missIndicatorTimeoutId) {
     clearTimeout(missIndicatorTimeoutId);
   }
@@ -940,7 +944,7 @@ function showMissIndicator(point) {
   missIndicatorTimeoutId = setTimeout(() => {
     missIndicatorTimeoutId = null;
     hideMissIndicator();
-  }, 320);
+  }, 360);
 }
 
 function hideTryAgainMessage() {
@@ -948,8 +952,16 @@ function hideTryAgainMessage() {
   tryAgainMessage.hidden = true;
 }
 
+function getPrimaryDotForTryAgain() {
+  const modeDots = getDotsForMode();
+  const visiblePrimaryDot = modeDots.find((dotElement) => !dotElement.hidden && !dotElement.classList.contains('hidden'));
+  return visiblePrimaryDot || modeDots[0] || dot;
+}
+
 function positionTryAgainMessage() {
-  const primaryDot = dot;
+  const primaryDot = getPrimaryDotForTryAgain();
+  if (!primaryDot) return;
+
   const dotRect = primaryDot.getBoundingClientRect();
   const messageWidth = tryAgainMessage.offsetWidth || 110;
   const messageHeight = tryAgainMessage.offsetHeight || 34;
@@ -1030,24 +1042,27 @@ function handleTap(event) {
   showMissIndicator(interactionPoints[0]);
 
   if (misses >= maxMisses) {
-    taps = 0;
-    misses = 0;
-    triggerResetHaptic();
-    splitSequenceLastTappedSide = null;
-    counter.textContent = '0';
-    hideMissIndicator();
-    showTryAgainMessage();
-    resetDotColors();
-    resetDots();
-    hasRoundStarted = false;
-    hideNewHighscoreMessage();
-    updateSplitTargetHighlight();
-
     if (missResetMoveTimeoutId) {
       clearTimeout(missResetMoveTimeoutId);
     }
 
-    missResetMoveTimeoutId = null;
+    missResetMoveTimeoutId = setTimeout(() => {
+      missResetMoveTimeoutId = null;
+      taps = 0;
+      misses = 0;
+      triggerResetHaptic();
+      splitSequenceLastTappedSide = null;
+      counter.textContent = '0';
+      hideMissIndicator();
+      resetDotColors();
+      resetDots();
+      requestAnimationFrame(() => {
+        showTryAgainMessage();
+      });
+      hasRoundStarted = false;
+      hideNewHighscoreMessage();
+      updateSplitTargetHighlight();
+    }, 420);
   }
 }
 
