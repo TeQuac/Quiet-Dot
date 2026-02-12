@@ -34,8 +34,13 @@ const switchUserButton = document.getElementById('switch-user-button');
 const usernameValue = document.getElementById('username-value');
 const userHighscoreNormal = document.getElementById('user-highscore-normal');
 const userHighscoreSplit = document.getElementById('user-highscore-split');
-const highscoreTrack = document.getElementById('highscore-track');
-const tickerModeLabel = document.getElementById('ticker-mode-label');
+const highscoreButton = document.getElementById('highscore-button');
+const highscoreOverlay = document.getElementById('highscore-overlay');
+const highscoreModeNormalButton = document.getElementById('highscore-mode-normal');
+const highscoreModeSplitButton = document.getElementById('highscore-mode-split');
+const highscoreList = document.getElementById('highscore-list');
+const highscoreEmpty = document.getElementById('highscore-empty');
+const highscoreCloseButton = document.getElementById('highscore-close');
 
 const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
@@ -73,6 +78,7 @@ const maxMisses = 2;
 let currentUser = null;
 let userCache = [];
 let currentMode = 'normal';
+let selectedHighscoreMode = 'normal';
 let authMode = 'register';
 let splitSequenceFirstDot = null;
 
@@ -150,30 +156,40 @@ function getTopTenEntries(users, mode) {
     .filter((entry) => getScore(entry, mode) > 0);
 }
 
-function getEntryClass(index) {
-  if (index === 0) return 'rank-1';
-  if (index === 1) return 'rank-2';
-  if (index === 2) return 'rank-3';
-  return '';
-}
-
-function renderTicker(users, mode) {
+function renderHighscoreList(users, mode) {
   const entries = getTopTenEntries(users, mode);
-  tickerModeLabel.textContent = `Top 10 · ${gameModes[mode].label}`;
+  highscoreModeNormalButton.classList.toggle('active', mode === 'normal');
+  highscoreModeSplitButton.classList.toggle('active', mode === 'split');
+  highscoreModeNormalButton.setAttribute('aria-selected', String(mode === 'normal'));
+  highscoreModeSplitButton.setAttribute('aria-selected', String(mode === 'split'));
 
+  highscoreList.innerHTML = '';
   if (entries.length === 0) {
-    highscoreTrack.textContent = `Noch keine ${gameModes[mode].label}-Highscores`;
+    highscoreEmpty.textContent = `Noch keine ${gameModes[mode].label}-Highscores vorhanden.`;
+    highscoreEmpty.classList.remove('hidden');
     return;
   }
 
-  const tickerItems = entries
-    .map((entry, index) => {
-      const rankClass = getEntryClass(index);
-      return `<span class="ticker-entry ${rankClass}">${index + 1}. ${entry.name} - ${getScore(entry, mode)}</span>`;
-    })
-    .join('<span aria-hidden="true">•</span>');
+  highscoreEmpty.classList.add('hidden');
+  entries.forEach((entry, index) => {
+    const item = document.createElement('li');
+    item.className = 'highscore-entry';
 
-  highscoreTrack.innerHTML = `<div class="ticker-content">${tickerItems}<span aria-hidden="true">•</span>${tickerItems}</div>`;
+    const rank = document.createElement('span');
+    rank.className = `highscore-rank ${index < 3 ? `rank-${index + 1}` : ''}`;
+    rank.textContent = `${index + 1}.`;
+
+    const name = document.createElement('span');
+    name.className = 'highscore-name';
+    name.textContent = entry.name;
+
+    const score = document.createElement('span');
+    score.className = 'highscore-score';
+    score.textContent = String(getScore(entry, mode));
+
+    item.append(rank, name, score);
+    highscoreList.appendChild(item);
+  });
 }
 
 async function fetchTopTenRemote() {
@@ -322,11 +338,26 @@ async function updateTicker() {
       upsertUserCache(entry.name, 'normal', getScore(entry, 'normal'));
       upsertUserCache(entry.name, 'split', getScore(entry, 'split'));
     });
-    renderTicker(remoteTopTen, currentMode);
+    renderHighscoreList(remoteTopTen, selectedHighscoreMode);
     return;
   }
 
-  renderTicker(userCache, currentMode);
+  renderHighscoreList(userCache, selectedHighscoreMode);
+}
+
+function showHighscoreOverlay() {
+  selectedHighscoreMode = currentMode;
+  highscoreOverlay.classList.remove('hidden');
+  void updateTicker();
+}
+
+function hideHighscoreOverlay() {
+  highscoreOverlay.classList.add('hidden');
+}
+
+function setHighscoreMode(mode) {
+  selectedHighscoreMode = mode;
+  void updateTicker();
 }
 
 function updateModeButtons() {
@@ -444,9 +475,10 @@ function showStartMenu() {
   hideFeedbackOverlay();
   modeScreen.classList.add('hidden');
   startScreen.classList.remove('hidden');
+  hideHighscoreOverlay();
   startButton.disabled = false;
   updateCurrentUserHighscoreDisplay();
-  updateTicker();
+  void updateTicker();
 }
 
 function showModeScreen() {
@@ -876,7 +908,7 @@ function applyMode(mode) {
   currentMode = mode;
   updateModeButtons();
   updateCurrentUserHighscoreDisplay();
-  updateTicker();
+  void updateTicker();
 }
 
 
@@ -934,6 +966,33 @@ modeSplitButton.addEventListener('click', () => {
 
 modeBackButton.addEventListener('click', () => {
   showStartMenu();
+});
+
+highscoreButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  showHighscoreOverlay();
+});
+
+highscoreModeNormalButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  setHighscoreMode('normal');
+});
+
+highscoreModeSplitButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  setHighscoreMode('split');
+});
+
+highscoreCloseButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  hideHighscoreOverlay();
+});
+
+highscoreOverlay.addEventListener('click', (event) => {
+  if (event.target === highscoreOverlay) {
+    hideHighscoreOverlay();
+  }
 });
 
 

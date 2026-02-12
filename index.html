@@ -48,6 +48,7 @@
   </div>
 
   <div id="start-screen" class="hidden">
+    <button id="highscore-button" type="button" aria-label="Top-10-Highscores öffnen">🏆</button>
     <header id="start-header">
       <div id="username-label"><span id="username-value"></span></div>
       <div id="user-highscore">Normal: <span id="user-highscore-normal">0</span> | Split: <span id="user-highscore-split">0</span></div>
@@ -57,9 +58,18 @@
     <button id="switch-user-button" type="button">Anderen User anmelden</button>
     <button id="feedback-button" type="button">Nachricht an Entwickler</button>
 
-    <div id="ticker-mode-label">Top 10 · Normal</div>
-    <div id="highscore-ticker" aria-label="Top 10 Highscores">
-      <div id="highscore-track"></div>
+  </div>
+
+  <div id="highscore-overlay" class="overlay hidden" aria-live="polite">
+    <div class="card highscore-card" role="dialog" aria-modal="true" aria-labelledby="highscore-title">
+      <h2 id="highscore-title">Top 10 Highscores</h2>
+      <div class="highscore-mode-selector" role="tablist" aria-label="Spielmodi für Highscores">
+        <button id="highscore-mode-normal" type="button" role="tab" aria-selected="true">Normal</button>
+        <button id="highscore-mode-split" type="button" role="tab" aria-selected="false">Split</button>
+      </div>
+      <ol id="highscore-list"></ol>
+      <p id="highscore-empty" class="hidden">Noch keine Highscores vorhanden.</p>
+      <button id="highscore-close" type="button" class="secondary">Schließen</button>
     </div>
   </div>
 
