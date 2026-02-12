@@ -403,15 +403,39 @@ function hideFeedbackOverlay() {
 async function submitFeedbackRemote(message) {
   if (!supabaseClient) return;
 
+  const trimmedMessage = message.trim();
   const payload = {
-    message: message.trim(),
+    message: trimmedMessage,
     sender_email: developerEmail
   };
 
-  const { error } = await supabaseClient.from('feedback_messages').insert(payload);
-  if (error) {
-    console.warn('Feedback konnte nicht gespeichert werden:', error.message);
-  }
+  const savePromise = supabaseClient.from('feedback_messages').insert(payload)
+    .then(({ error }) => {
+      if (error) {
+        console.warn('Feedback konnte nicht gespeichert werden:', error.message);
+      }
+    })
+    .catch((error) => {
+      console.warn('Feedback-Speicherung fehlgeschlagen:', error?.message || error);
+    });
+
+  const mailPromise = supabaseClient.functions.invoke('send-feedback-email', {
+    body: {
+      message: trimmedMessage,
+      senderEmail: developerEmail,
+      recipientEmail: developerEmail
+    }
+  })
+    .then(({ error }) => {
+      if (error) {
+        console.warn('Feedback-Mail konnte nicht gesendet werden:', error.message);
+      }
+    })
+    .catch((error) => {
+      console.warn('Feedback-Mailversand fehlgeschlagen:', error?.message || error);
+    });
+
+  await Promise.allSettled([savePromise, mailPromise]);
 }
 
 function showStartMenu() {

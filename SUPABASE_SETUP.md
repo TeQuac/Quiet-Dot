@@ -45,3 +45,16 @@ Tipp: Wenn bereits Daten existieren, ist das Skript idempotent ausgelegt (`if no
 ## 5) Feedback aus der App
 Die Nachricht an den Entwickler wird ohne Mail-App direkt in Supabase gespeichert (`feedback_messages`).
 Dafür wird absichtlich die Empfängeradresse auch als `sender_email` verwendet, damit Nutzer keine Mailadresse eingeben müssen.
+
+
+## 6) E-Mail-Zustellung aktivieren (Edge Function)
+Damit Feedback **nicht nur gespeichert**, sondern auch an die Empfängeradresse gesendet wird:
+
+1. Supabase CLI installieren und einloggen.
+2. Secret setzen:
+   - `supabase secrets set RESEND_API_KEY=DEIN_RESEND_API_KEY`
+3. Edge Function deployen:
+   - `supabase functions deploy send-feedback-email --no-verify-jwt`
+4. In Resend sicherstellen, dass die `from`-Adresse (hier Entwickleradresse) als Sender verifiziert ist.
+
+Danach ruft die App beim Absenden zusätzlich die Function `send-feedback-email` auf und verschickt die Mail serverseitig.
