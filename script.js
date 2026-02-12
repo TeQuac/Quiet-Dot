@@ -856,6 +856,15 @@ document.addEventListener('selectstart', (event) => {
   event.preventDefault();
 });
 
+
+document.addEventListener('touchmove', (event) => {
+  event.preventDefault();
+}, { passive: false });
+
+document.addEventListener('wheel', (event) => {
+  event.preventDefault();
+}, { passive: false });
+
 const isTouchDevice = 'ontouchstart' in window;
 document.addEventListener(isTouchDevice ? 'touchstart' : 'click', handleTap);
 
