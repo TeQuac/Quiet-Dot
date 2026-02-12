@@ -81,6 +81,7 @@ let currentMode = 'normal';
 let selectedHighscoreMode = 'normal';
 let authMode = 'register';
 let splitSequenceLastTappedSide = null;
+let missResetMoveTimeoutId = null;
 
 const movementAnimations = new Map();
 const movementStates = new Map();
@@ -589,6 +590,11 @@ function setGameActive(active) {
   gameActive = active;
   splitSequenceLastTappedSide = null;
 
+  if (missResetMoveTimeoutId) {
+    clearTimeout(missResetMoveTimeoutId);
+    missResetMoveTimeoutId = null;
+  }
+
   alwaysVisibleInGame.forEach((element) => {
     element.classList.toggle('hidden', !active);
     element.hidden = !active;
@@ -920,7 +926,16 @@ function handleTap(event) {
     resetDotColors();
     resetDots();
     updateSplitTargetHighlight();
-    getDotsForMode().forEach((dotElement) => moveDot(dotElement));
+
+    if (missResetMoveTimeoutId) {
+      clearTimeout(missResetMoveTimeoutId);
+    }
+
+    missResetMoveTimeoutId = window.setTimeout(() => {
+      if (!gameActive) return;
+      getDotsForMode().forEach((dotElement) => moveDot(dotElement));
+      missResetMoveTimeoutId = null;
+    }, 450);
   }
 }
 
