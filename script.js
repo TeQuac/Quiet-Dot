@@ -2,7 +2,7 @@ const dot = document.getElementById('dot');
 const dotSplit = document.getElementById('dot-split');
 const splitDivider = document.getElementById('split-divider');
 const counter = document.getElementById('counter');
-const gameHighscore = document.getElementById('game-highscore');
+const newHighscoreDisplay = document.getElementById('new-highscore');
 const missesDisplay = document.getElementById('misses');
 const donate = document.getElementById('donate');
 const backToMenu = document.getElementById('back-to-menu');
@@ -83,6 +83,7 @@ let authMode = 'register';
 let splitSequenceLastTappedSide = null;
 let missResetMoveTimeoutId = null;
 let hasRoundStarted = false;
+let newHighscoreTimeoutId = null;
 
 const movementAnimations = new Map();
 const movementStates = new Map();
@@ -95,8 +96,8 @@ const resetVibrationPattern = [30, 40, 30];
 const resetVibrationDuration = 40;
 let currentDotColorIndex = 0;
 
-const alwaysVisibleInGame = [counter, gameHighscore, missesDisplay, donate, backToMenu];
-const avoidElements = [counter, gameHighscore, missesDisplay, donate, backToMenu];
+const alwaysVisibleInGame = [counter, missesDisplay, donate, backToMenu];
+const avoidElements = [counter, newHighscoreDisplay, missesDisplay, donate, backToMenu];
 
 function ensureUserRecordShape(user) {
   const highscores = {
@@ -377,7 +378,6 @@ function updateCurrentUserHighscoreDisplay() {
 
   userHighscoreNormal.textContent = String(normalScore);
   userHighscoreSplit.textContent = String(splitScore);
-  gameHighscore.textContent = `Highscore (${gameModes[currentMode].label}): ${getScore(record, currentMode)}`;
 }
 
 function setCurrentUser(record) {
@@ -402,6 +402,10 @@ async function updateCurrentUserHighscore(newScore) {
   const currentBest = getScore(record, currentMode);
   if (newScore <= currentBest) return;
 
+  if (newScore === currentBest + 1) {
+    showNewHighscoreMessage();
+  }
+
   let bestScore = newScore;
   if (currentMode === 'normal') {
     const persistedHighscore = await submitHighscoreRemote(currentUser, newScore, currentMode);
@@ -416,6 +420,32 @@ async function updateCurrentUserHighscore(newScore) {
   upsertUserCache(currentUser, currentMode, bestScore);
   updateCurrentUserHighscoreDisplay();
   await updateTicker();
+}
+
+
+function hideNewHighscoreMessage() {
+  if (newHighscoreTimeoutId) {
+    clearTimeout(newHighscoreTimeoutId);
+    newHighscoreTimeoutId = null;
+  }
+
+  newHighscoreDisplay.classList.add('hidden');
+  newHighscoreDisplay.hidden = true;
+}
+
+function showNewHighscoreMessage() {
+  if (newHighscoreTimeoutId) {
+    clearTimeout(newHighscoreTimeoutId);
+  }
+
+  newHighscoreDisplay.classList.remove('hidden');
+  newHighscoreDisplay.hidden = false;
+
+  newHighscoreTimeoutId = setTimeout(() => {
+    newHighscoreDisplay.classList.add('hidden');
+    newHighscoreDisplay.hidden = true;
+    newHighscoreTimeoutId = null;
+  }, 5000);
 }
 
 function showFeedbackOverlay(message = '') {
@@ -620,13 +650,14 @@ function setGameActive(active) {
     taps = 0;
     misses = 0;
     hasRoundStarted = false;
-    counter.textContent = 'Taps: 0';
+    counter.textContent = '0';
     missesDisplay.textContent = `Misses: 0/${maxMisses}`;
-    gameHighscore.textContent = `Highscore (${gameModes[currentMode].label}): ${getScore(getUserRecordFromCache(currentUser), currentMode)}`;
+    hideNewHighscoreMessage();
     resetDotColors();
     resetDots();
     updateSplitTargetHighlight();
   } else {
+    hideNewHighscoreMessage();
     stopAllMovement();
     splitDivider.classList.add('hidden');
     splitDivider.hidden = true;
@@ -826,7 +857,7 @@ function resetDotColors() {
 function hitDot() {
   hasRoundStarted = true;
   taps++;
-  counter.textContent = `Taps: ${taps}`;
+  counter.textContent = String(taps);
   updateDotColorByTaps();
   updateCurrentUserHighscore(taps);
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
@@ -939,11 +970,12 @@ function handleTap(event) {
     misses = 0;
     triggerResetHaptic();
     splitSequenceLastTappedSide = null;
-    counter.textContent = 'Taps: 0';
+    counter.textContent = '0';
     missesDisplay.textContent = `Misses: 0/${maxMisses}`;
     resetDotColors();
     resetDots();
     hasRoundStarted = false;
+    hideNewHighscoreMessage();
     updateSplitTargetHighlight();
 
     if (missResetMoveTimeoutId) {

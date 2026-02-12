@@ -410,19 +410,71 @@ a {
 }
 
 #counter,
-#game-highscore,
+#new-highscore,
 #misses {
   position: fixed;
   top: 10px;
-  font-size: 18px;
-  color: #2c3e52;
-  font-weight: 600;
   z-index: 15;
 }
 
-#counter { left: 10px; }
-#game-highscore { left: 50%; transform: translateX(-50%); }
-#misses { right: 10px; }
+#counter {
+  left: 10px;
+  min-width: 68px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #2f4a68;
+  background: linear-gradient(180deg, #fff7e3 0%, #ffe5b8 100%);
+  border: 1px solid #f0c780;
+  box-shadow: 0 6px 14px rgba(180, 128, 45, 0.22);
+}
+
+#new-highscore {
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #b33b00;
+  background: rgba(255, 245, 228, 0.95);
+  border: 1px solid #f1c38f;
+  box-shadow: 0 8px 20px rgba(167, 89, 25, 0.24);
+  animation: wobbleHighscore 0.55s ease-in-out infinite;
+}
+
+#misses {
+  right: 10px;
+  font-size: 18px;
+  color: #2c3e52;
+  font-weight: 600;
+}
+
+@keyframes wobbleHighscore {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+
+  20% {
+    transform: translateX(-50%) rotate(-3deg);
+  }
+
+  40% {
+    transform: translateX(-50%) rotate(3deg);
+  }
+
+  60% {
+    transform: translateX(-50%) rotate(-2deg);
+  }
+
+  80% {
+    transform: translateX(-50%) rotate(2deg);
+  }
+}
 
 #back-to-menu {
   position: fixed;
