@@ -400,10 +400,18 @@ function hideFeedbackOverlay() {
   feedbackError.classList.add('hidden');
 }
 
-function sendFeedbackMail(message) {
-  const subject = encodeURIComponent('Silentap Feedback');
-  const body = encodeURIComponent(message.trim());
-  window.location.href = `mailto:${developerEmail}?subject=${subject}&body=${body}`;
+async function submitFeedbackRemote(message) {
+  if (!supabaseClient) return;
+
+  const payload = {
+    message: message.trim(),
+    sender_email: developerEmail
+  };
+
+  const { error } = await supabaseClient.from('feedback_messages').insert(payload);
+  if (error) {
+    console.warn('Feedback konnte nicht gespeichert werden:', error.message);
+  }
 }
 
 function showStartMenu() {
@@ -952,8 +960,9 @@ feedbackForm.addEventListener('submit', (event) => {
     return;
   }
 
-  sendFeedbackMail(message);
   hideFeedbackOverlay();
+  showStartMenu();
+  void submitFeedbackRemote(message);
 });
 
 authRegisterButton.addEventListener('click', () => {

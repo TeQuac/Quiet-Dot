@@ -28,6 +28,29 @@ alter table public.game_scores
 create index if not exists game_scores_highscore_idx on public.game_scores (highscore desc);
 create index if not exists game_scores_split_highscore_idx on public.game_scores (split_highscore desc);
 
+
+create table if not exists public.feedback_messages (
+  id bigserial primary key,
+  message text not null check (length(trim(message)) >= 3),
+  sender_email text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists feedback_messages_created_at_idx on public.feedback_messages (created_at desc);
+
+alter table public.feedback_messages enable row level security;
+
+drop policy if exists "feedback_messages_insert" on public.feedback_messages;
+create policy "feedback_messages_insert"
+on public.feedback_messages
+for insert
+to anon, authenticated
+with check (
+  length(trim(message)) >= 3
+  and sender_email is not null
+  and length(trim(sender_email)) > 0
+);
+
 create or replace function public.tg_set_updated_at()
 returns trigger
 language plpgsql
