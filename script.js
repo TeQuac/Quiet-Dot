@@ -485,22 +485,18 @@ function showModeScreen() {
 
 function setHighscoreMode(mode) {
   selectedHighscoreMode = mode;
-  renderHighscoreList(userCache, selectedHighscoreMode);
 }
 
 async function showHighscoreOverlay() {
-  selectedHighscoreMode = currentMode;
   highscoreOverlay.classList.remove('hidden');
-  renderHighscoreList(userCache, selectedHighscoreMode);
 
   const remoteTopTen = await fetchTopTenRemote();
   if (remoteTopTen) {
-    remoteTopTen.forEach((entry) => {
-      upsertUserCache(entry.name, 'normal', getScore(entry, 'normal'));
-      upsertUserCache(entry.name, 'split', getScore(entry, 'split'));
-    });
-    renderHighscoreList(userCache, selectedHighscoreMode);
+    renderHighscoreList(remoteTopTen, selectedHighscoreMode);
+    return;
   }
+
+  renderHighscoreList(userCache, selectedHighscoreMode);
 }
 
 function hideHighscoreOverlay() {
@@ -1196,17 +1192,20 @@ modeBackButton.addEventListener('click', () => {
 highscoreButton.addEventListener('click', (event) => {
   event.preventDefault();
   event.stopPropagation();
+  setHighscoreMode(currentMode);
   showHighscoreOverlay();
 });
 
-highscoreModeNormalButton.addEventListener('click', (event) => {
+highscoreModeNormalButton.addEventListener('click', async (event) => {
   event.preventDefault();
   setHighscoreMode('normal');
+  await showHighscoreOverlay();
 });
 
-highscoreModeSplitButton.addEventListener('click', (event) => {
+highscoreModeSplitButton.addEventListener('click', async (event) => {
   event.preventDefault();
   setHighscoreMode('split');
+  await showHighscoreOverlay();
 });
 
 highscoreCloseButton.addEventListener('click', (event) => {
