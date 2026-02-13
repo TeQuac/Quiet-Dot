@@ -113,6 +113,7 @@ a {
 #auth-login,
 #mode-normal,
 #mode-split,
+#mode-pressure,
 #mode-back,
 #feedback-send,
 #feedback-cancel,
@@ -136,7 +137,8 @@ a {
 }
 
 #mode-normal.active,
-#mode-split.active {
+#mode-split.active,
+#mode-pressure.active {
   outline: 2px solid #d6ae76;
 }
 
@@ -406,6 +408,73 @@ a {
     opacity: 0.2;
     transform: scale(1.12);
     box-shadow: 0 0 16px rgba(212, 175, 55, 0.2);
+  }
+}
+
+
+#dot.pressure-tension-low {
+  animation: pressureJitterLow 0.42s steps(2, end) infinite;
+}
+
+#dot.pressure-tension-medium {
+  animation: pressureJitterMedium 0.24s steps(2, end) infinite;
+}
+
+#dot.pressure-tension-high {
+  animation: pressureJitterHigh 0.12s steps(2, end) infinite;
+  box-shadow: 0 0 0 0 rgba(255, 106, 74, 0.45);
+}
+
+#dot.pressure-explode {
+  animation: pressureExplode 0.42s ease-out forwards;
+}
+
+@keyframes pressureJitterLow {
+  0% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-1px, 1px) scale(1.01); }
+  50% { transform: translate(1px, -1px) scale(0.99); }
+  75% { transform: translate(-1px, -1px) scale(1.01); }
+  100% { transform: translate(1px, 1px) scale(1); }
+}
+
+@keyframes pressureJitterMedium {
+  0% { transform: translate(0, 0) scale(1); }
+  20% { transform: translate(-2px, 1px) scale(1.01); }
+  40% { transform: translate(2px, -2px) scale(0.98); }
+  60% { transform: translate(-2px, -1px) scale(1.02); }
+  80% { transform: translate(2px, 2px) scale(0.99); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes pressureJitterHigh {
+  0% { transform: translate(0, 0) scale(1); }
+  16% { transform: translate(-3px, 2px) scale(1.03); }
+  32% { transform: translate(3px, -3px) scale(0.95); }
+  48% { transform: translate(-3px, -2px) scale(1.04); }
+  64% { transform: translate(3px, 3px) scale(0.96); }
+  80% { transform: translate(-2px, 3px) scale(1.02); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes pressureExplode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+
+  45% {
+    transform: scale(1.8);
+    opacity: 0.95;
+    filter: brightness(1.6);
+    box-shadow: 0 0 0 20px rgba(255, 98, 66, 0.5), 0 0 24px rgba(255, 98, 66, 0.7);
+  }
+
+  100% {
+    transform: scale(0.25);
+    opacity: 0;
+    filter: brightness(2);
+    box-shadow: 0 0 0 42px rgba(255, 145, 110, 0);
   }
 }
 
@@ -716,4 +785,27 @@ a {
     opacity: 0;
     transform: scale(1);
   }
+}
+
+
+.pressure-hint-card {
+  width: min(520px, calc(100vw - 40px));
+  gap: 12px;
+}
+
+.pressure-hint-card p {
+  margin: 0;
+  color: #33475b;
+  line-height: 1.45;
+}
+
+#pressure-hint-close {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(180deg, #7a2f2f 0%, #5f1f1f 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
 }

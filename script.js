@@ -46,9 +46,12 @@ const highscoreCloseButton = document.getElementById('highscore-close');
 const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
+const modePressureButton = document.getElementById('mode-pressure');
 const modeBackButton = document.getElementById('mode-back');
 const splitHintOverlay = document.getElementById('split-hint-overlay');
 const splitHintCloseButton = document.getElementById('split-hint-close');
+const pressureHintOverlay = document.getElementById('pressure-hint-overlay');
+const pressureHintCloseButton = document.getElementById('pressure-hint-close');
 
 const storageKeys = {
   users: 'silentapUsers',
@@ -57,7 +60,8 @@ const storageKeys = {
 
 const gameModes = {
   normal: { label: 'Normal' },
-  split: { label: 'Split' }
+  split: { label: 'Split' },
+  pressure: { label: 'Druck' }
 };
 
 const developerEmail = 'te.quac@web.de';
@@ -86,10 +90,13 @@ let missResetMoveTimeoutId = null;
 let missIndicatorTimeoutId = null;
 let hasRoundStarted = false;
 let newHighscoreTimeoutId = null;
+let pressureModeTimerId = null;
+let pressureModeStartedAt = 0;
 
 const movementAnimations = new Map();
 const movementStates = new Map();
 const maxDotVelocity = 4.8;
+const pressureModeTimeLimitMs = 5000;
 
 const warmDotColors = [
   '#1f2937', '#8b5e3c', '#a05d4e', '#b66a50', '#c9785a', '#d08a62', '#9f7a57', '#c17f59', '#b5835a', '#7a5c4a', '#94624e'
@@ -100,6 +107,7 @@ let currentDotColorIndex = 0;
 
 const alwaysVisibleInGame = [counter, donate, backToMenu];
 const avoidElements = [counter, newHighscoreDisplay, tryAgainMessage, donate, backToMenu];
+const pressureModeClasses = ['pressure-tension-low', 'pressure-tension-medium', 'pressure-tension-high'];
 
 function ensureUserRecordShape(user) {
   const highscores = {
@@ -401,6 +409,7 @@ function setCurrentUser(user) {
 async function updateCurrentUserHighscore(score) {
   if (!currentUser) return;
   if (!Number.isFinite(score) || score < 0) return;
+  if (isPressureMode()) return;
 
   const previousBest = getScore(currentUser, currentMode);
   if (score <= previousBest) return;
@@ -455,9 +464,14 @@ function getDotsForMode() {
   return currentMode === 'split' ? [dot, dotSplit] : [dot];
 }
 
+function isPressureMode() {
+  return currentMode === 'pressure';
+}
+
 function updateModeButtons() {
   modeNormalButton.classList.toggle('active', currentMode === 'normal');
   modeSplitButton.classList.toggle('active', currentMode === 'split');
+  modePressureButton.classList.toggle('active', currentMode === 'pressure');
 }
 
 function showStartMenu() {
@@ -465,6 +479,7 @@ function showStartMenu() {
   modeScreen.classList.add('hidden');
   hideGameElements();
   closeSplitHint();
+  closePressureHint();
   clearPendingTimers();
   misses = 0;
   splitSequenceLastTappedSide = null;
@@ -479,6 +494,7 @@ function showModeScreen() {
   startScreen.classList.add('hidden');
   modeScreen.classList.remove('hidden');
   closeSplitHint();
+  closePressureHint();
   hideGameElements();
   updateModeButtons();
 }
@@ -581,6 +597,8 @@ function clearPendingTimers() {
     clearTimeout(newHighscoreTimeoutId);
     newHighscoreTimeoutId = null;
   }
+
+  clearPressureModeTimer();
 }
 
 function setGameActive(active) {
@@ -600,11 +618,16 @@ function setGameActive(active) {
     counter.textContent = '0';
     resetDotColors();
     resetDots();
+    clearPressureModeTimer();
     updateSplitTargetHighlight();
     stopAllMovement();
+    if (isPressureMode()) {
+      startPressureModeTimer();
+    }
     void updateTicker();
   } else {
     clearPendingTimers();
+    clearPressureModeTimer();
     stopAllMovement();
     splitSequenceLastTappedSide = null;
     updateSplitTargetHighlight();
@@ -864,6 +887,94 @@ function stopAllMovement() {
   movementStates.clear();
 }
 
+
+function clearPressureTensionClasses() {
+  dot.classList.remove(...pressureModeClasses);
+}
+
+function updatePressureTensionVisual() {
+  clearPressureTensionClasses();
+  if (!isPressureMode() || !gameActive || !pressureModeStartedAt) return;
+
+  const elapsed = Date.now() - pressureModeStartedAt;
+  const ratio = Math.min(1, elapsed / pressureModeTimeLimitMs);
+
+  if (ratio >= 0.66) {
+    dot.classList.add('pressure-tension-high');
+  } else if (ratio >= 0.33) {
+    dot.classList.add('pressure-tension-medium');
+  } else {
+    dot.classList.add('pressure-tension-low');
+  }
+}
+
+function clearPressureModeTimer() {
+  if (pressureModeTimerId) {
+    clearInterval(pressureModeTimerId);
+    pressureModeTimerId = null;
+  }
+  pressureModeStartedAt = 0;
+  clearPressureTensionClasses();
+  dot.classList.remove('pressure-explode');
+}
+
+function resetRoundToCenterWithTryAgain() {
+  taps = 0;
+  misses = 0;
+  triggerResetHaptic();
+  splitSequenceLastTappedSide = null;
+  counter.textContent = '0';
+  hideMissIndicator();
+  resetDotColors();
+  resetDots();
+  clearPressureModeTimer();
+  requestAnimationFrame(() => {
+    showTryAgainMessage();
+  });
+  hasRoundStarted = false;
+  hideNewHighscoreMessage();
+  updateSplitTargetHighlight();
+
+  if (isPressureMode() && gameActive) {
+    startPressureModeTimer();
+  }
+}
+
+function triggerPressureExplosion() {
+  if (!gameActive || !isPressureMode()) return;
+
+  clearPressureModeTimer();
+  dot.classList.add('pressure-explode');
+
+  setTimeout(() => {
+    dot.classList.remove('pressure-explode');
+    if (!gameActive || !isPressureMode()) return;
+    resetRoundToCenterWithTryAgain();
+  }, 420);
+}
+
+function startPressureModeTimer() {
+  if (!gameActive || !isPressureMode()) return;
+
+  clearPressureModeTimer();
+  pressureModeStartedAt = Date.now();
+  updatePressureTensionVisual();
+
+  pressureModeTimerId = setInterval(() => {
+    if (!gameActive || !isPressureMode()) {
+      clearPressureModeTimer();
+      return;
+    }
+
+    const elapsed = Date.now() - pressureModeStartedAt;
+    if (elapsed >= pressureModeTimeLimitMs) {
+      triggerPressureExplosion();
+      return;
+    }
+
+    updatePressureTensionVisual();
+  }, 60);
+}
 function updateDotColorByTaps() {
   const nextColorIndex = Math.floor(taps / 10) % warmDotColors.length;
   if (nextColorIndex === currentDotColorIndex) return;
@@ -889,6 +1000,10 @@ function hitDot() {
   updateDotColorByTaps();
   updateCurrentUserHighscore(taps);
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
+
+  if (isPressureMode()) {
+    startPressureModeTimer();
+  }
 }
 
 function getInteractionPoints(event) {
@@ -1072,20 +1187,7 @@ function handleTap(event) {
 
     missResetMoveTimeoutId = setTimeout(() => {
       missResetMoveTimeoutId = null;
-      taps = 0;
-      misses = 0;
-      triggerResetHaptic();
-      splitSequenceLastTappedSide = null;
-      counter.textContent = '0';
-      hideMissIndicator();
-      resetDotColors();
-      resetDots();
-      requestAnimationFrame(() => {
-        showTryAgainMessage();
-      });
-      hasRoundStarted = false;
-      hideNewHighscoreMessage();
-      updateSplitTargetHighlight();
+      resetRoundToCenterWithTryAgain();
     }, 420);
   }
 }
@@ -1097,6 +1199,14 @@ function closeSplitHint() {
 
 function showSplitHint() {
   splitHintOverlay.classList.remove('hidden');
+}
+
+function closePressureHint() {
+  pressureHintOverlay.classList.add('hidden');
+}
+
+function showPressureHint() {
+  pressureHintOverlay.classList.remove('hidden');
 }
 
 function applyMode(mode) {
@@ -1185,6 +1295,12 @@ modeSplitButton.addEventListener('click', () => {
   showSplitHint();
 });
 
+modePressureButton.addEventListener('click', () => {
+  applyMode('pressure');
+  setGameActive(true);
+  showPressureHint();
+});
+
 modeBackButton.addEventListener('click', () => {
   showStartMenu();
 });
@@ -1228,6 +1344,17 @@ splitHintCloseButton.addEventListener('click', (event) => {
 splitHintOverlay.addEventListener('click', (event) => {
   if (event.target === splitHintOverlay) {
     closeSplitHint();
+  }
+});
+
+pressureHintCloseButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  closePressureHint();
+});
+
+pressureHintOverlay.addEventListener('click', (event) => {
+  if (event.target === pressureHintOverlay) {
+    closePressureHint();
   }
 });
 
