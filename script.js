@@ -35,10 +35,12 @@ const switchUserButton = document.getElementById('switch-user-button');
 const usernameValue = document.getElementById('username-value');
 const userHighscoreNormal = document.getElementById('user-highscore-normal');
 const userHighscoreSplit = document.getElementById('user-highscore-split');
+const userHighscorePressure = document.getElementById('user-highscore-pressure');
 const highscoreButton = document.getElementById('highscore-button');
 const highscoreOverlay = document.getElementById('highscore-overlay');
 const highscoreModeNormalButton = document.getElementById('highscore-mode-normal');
 const highscoreModeSplitButton = document.getElementById('highscore-mode-split');
+const highscoreModePressureButton = document.getElementById('highscore-mode-pressure');
 const highscoreList = document.getElementById('highscore-list');
 const highscoreEmpty = document.getElementById('highscore-empty');
 const highscoreCloseButton = document.getElementById('highscore-close');
@@ -46,9 +48,12 @@ const highscoreCloseButton = document.getElementById('highscore-close');
 const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
+const modePressureButton = document.getElementById('mode-pressure');
 const modeBackButton = document.getElementById('mode-back');
 const splitHintOverlay = document.getElementById('split-hint-overlay');
 const splitHintCloseButton = document.getElementById('split-hint-close');
+const pressureHintOverlay = document.getElementById('pressure-hint-overlay');
+const pressureHintCloseButton = document.getElementById('pressure-hint-close');
 
 const storageKeys = {
   users: 'silentapUsers',
@@ -57,7 +62,8 @@ const storageKeys = {
 
 const gameModes = {
   normal: { label: 'Normal' },
-  split: { label: 'Split' }
+  split: { label: 'Split' },
+  pressure: { label: 'Druck' }
 };
 
 const developerEmail = 'te.quac@web.de';
@@ -86,10 +92,13 @@ let missResetMoveTimeoutId = null;
 let missIndicatorTimeoutId = null;
 let hasRoundStarted = false;
 let newHighscoreTimeoutId = null;
+let pressureModeTimerId = null;
+let pressureModeStartedAt = 0;
 
 const movementAnimations = new Map();
 const movementStates = new Map();
 const maxDotVelocity = 4.8;
+const pressureModeTimeLimitMs = 5000;
 
 const warmDotColors = [
   '#1f2937', '#8b5e3c', '#a05d4e', '#b66a50', '#c9785a', '#d08a62', '#9f7a57', '#c17f59', '#b5835a', '#7a5c4a', '#94624e'
@@ -100,11 +109,13 @@ let currentDotColorIndex = 0;
 
 const alwaysVisibleInGame = [counter, donate, backToMenu];
 const avoidElements = [counter, newHighscoreDisplay, tryAgainMessage, donate, backToMenu];
+const pressureModeClasses = ['pressure-tension-low', 'pressure-tension-medium', 'pressure-tension-high'];
 
 function ensureUserRecordShape(user) {
   const highscores = {
     normal: Number.isFinite(user?.highscores?.normal) ? user.highscores.normal : Number.isFinite(user?.highscore) ? user.highscore : 0,
-    split: Number.isFinite(user?.highscores?.split) ? user.highscores.split : 0
+    split: Number.isFinite(user?.highscores?.split) ? user.highscores.split : 0,
+    pressure: Number.isFinite(user?.highscores?.pressure) ? user.highscores.pressure : Number.isFinite(user?.pressure_highscore) ? user.pressure_highscore : 0
   };
 
   return {
@@ -149,7 +160,7 @@ function upsertUserCache(name, mode, score) {
   }
 
   if (!existing.highscores) {
-    existing.highscores = { normal: 0, split: 0 };
+    existing.highscores = { normal: 0, split: 0, pressure: 0 };
   }
 
   existing.highscores[mode] = Math.max(getScore(existing, mode), score);
@@ -168,8 +179,10 @@ function renderHighscoreList(users, mode) {
   const entries = getTopTenEntries(users, mode);
   highscoreModeNormalButton.classList.toggle('active', mode === 'normal');
   highscoreModeSplitButton.classList.toggle('active', mode === 'split');
+  highscoreModePressureButton.classList.toggle('active', mode === 'pressure');
   highscoreModeNormalButton.setAttribute('aria-selected', String(mode === 'normal'));
   highscoreModeSplitButton.setAttribute('aria-selected', String(mode === 'split'));
+  highscoreModePressureButton.setAttribute('aria-selected', String(mode === 'pressure'));
 
   highscoreList.innerHTML = '';
   if (entries.length === 0) {
@@ -203,11 +216,11 @@ function renderHighscoreList(users, mode) {
 async function fetchTopTenRemote() {
   if (!supabaseClient) return null;
 
-  const scoreColumn = currentMode === 'split' ? 'split_highscore' : 'highscore';
+  const scoreColumn = selectedHighscoreMode === 'split' ? 'split_highscore' : selectedHighscoreMode === 'pressure' ? 'pressure_highscore' : 'highscore';
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore')
+    .select('username, highscore, split_highscore, pressure_highscore')
     .order(scoreColumn, { ascending: false })
     .order('updated_at', { ascending: true })
     .limit(10);
@@ -219,7 +232,7 @@ async function fetchTopTenRemote() {
 
   return (data || []).map((entry) => ensureUserRecordShape({
     name: entry.username,
-    highscores: { normal: entry.highscore, split: entry.split_highscore }
+    highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore }
   }));
 }
 
@@ -242,7 +255,7 @@ function shapeRemoteUser(entry) {
   return {
     record: ensureUserRecordShape({
       name: entry.username,
-      highscores: { normal: entry.highscore, split: entry.split_highscore }
+      highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore }
     }),
     passwordHash: entry.password_hash || null
   };
@@ -253,7 +266,7 @@ async function fetchUserRemote(name) {
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, password_hash')
     .ilike('username', name)
     .limit(1)
     .maybeSingle();
@@ -271,7 +284,7 @@ async function createUserRemote(name, passwordHash) {
     return {
       record: ensureUserRecordShape({
         name,
-        highscores: { normal: 0, split: 0 }
+        highscores: { normal: 0, split: 0, pressure: 0 }
       }),
       passwordHash
     };
@@ -283,9 +296,10 @@ async function createUserRemote(name, passwordHash) {
       username: name,
       highscore: 0,
       split_highscore: 0,
+      pressure_highscore: 0,
       password_hash: passwordHash
     })
-    .select('username, highscore, split_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, password_hash')
     .single();
 
   if (error) {
@@ -300,7 +314,7 @@ async function setUserPasswordRemote(name, passwordHash) {
     return {
       record: ensureUserRecordShape({
         name,
-        highscores: { normal: 0, split: 0 }
+        highscores: { normal: 0, split: 0, pressure: 0 }
       }),
       passwordHash
     };
@@ -310,7 +324,7 @@ async function setUserPasswordRemote(name, passwordHash) {
     .from('game_scores')
     .update({ password_hash: passwordHash })
     .eq('username', name)
-    .select('username, highscore, split_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, password_hash')
     .single();
 
   if (error) {
@@ -323,13 +337,13 @@ async function setUserPasswordRemote(name, passwordHash) {
 async function upsertUserHighscoreRemote(name, mode, score) {
   if (!supabaseClient) return ensureUserRecordShape({ name, highscores: { [mode]: score } });
 
-  const column = mode === 'split' ? 'split_highscore' : 'highscore';
+  const column = mode === 'split' ? 'split_highscore' : mode === 'pressure' ? 'pressure_highscore' : 'highscore';
   const payload = { username: name, [column]: score };
 
   const { data, error } = await supabaseClient
     .from('game_scores')
     .upsert(payload, { onConflict: 'username' })
-    .select('username, highscore, split_highscore')
+    .select('username, highscore, split_highscore, pressure_highscore')
     .single();
 
   if (error) {
@@ -338,7 +352,7 @@ async function upsertUserHighscoreRemote(name, mode, score) {
 
   return ensureUserRecordShape({
     name: data.username,
-    highscores: { normal: data.highscore, split: data.split_highscore }
+    highscores: { normal: data.highscore, split: data.split_highscore, pressure: data.pressure_highscore }
   });
 }
 
@@ -384,11 +398,13 @@ function updateCurrentUserHighscoreDisplay() {
   if (!currentUser) {
     userHighscoreNormal.textContent = '0';
     userHighscoreSplit.textContent = '0';
+    userHighscorePressure.textContent = '0';
     return;
   }
 
   userHighscoreNormal.textContent = String(getScore(currentUser, 'normal'));
   userHighscoreSplit.textContent = String(getScore(currentUser, 'split'));
+  userHighscorePressure.textContent = String(getScore(currentUser, 'pressure'));
 }
 
 function setCurrentUser(user) {
@@ -414,8 +430,10 @@ async function updateCurrentUserHighscore(score) {
     const remoteUser = await upsertUserHighscoreRemote(currentUser.name, currentMode, score);
     currentUser.highscores.normal = Math.max(getScore(currentUser, 'normal'), getScore(remoteUser, 'normal'));
     currentUser.highscores.split = Math.max(getScore(currentUser, 'split'), getScore(remoteUser, 'split'));
+    currentUser.highscores.pressure = Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser, 'pressure'));
     upsertUserCache(currentUser.name, 'normal', getScore(currentUser, 'normal'));
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
+    upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
     updateCurrentUserHighscoreDisplay();
   } catch (error) {
     console.warn('Highscore konnte nicht synchronisiert werden:', error.message);
@@ -455,9 +473,14 @@ function getDotsForMode() {
   return currentMode === 'split' ? [dot, dotSplit] : [dot];
 }
 
+function isPressureMode() {
+  return currentMode === 'pressure';
+}
+
 function updateModeButtons() {
   modeNormalButton.classList.toggle('active', currentMode === 'normal');
   modeSplitButton.classList.toggle('active', currentMode === 'split');
+  modePressureButton.classList.toggle('active', currentMode === 'pressure');
 }
 
 function showStartMenu() {
@@ -465,6 +488,7 @@ function showStartMenu() {
   modeScreen.classList.add('hidden');
   hideGameElements();
   closeSplitHint();
+  closePressureHint();
   clearPendingTimers();
   misses = 0;
   splitSequenceLastTappedSide = null;
@@ -479,6 +503,7 @@ function showModeScreen() {
   startScreen.classList.add('hidden');
   modeScreen.classList.remove('hidden');
   closeSplitHint();
+  closePressureHint();
   hideGameElements();
   updateModeButtons();
 }
@@ -581,6 +606,8 @@ function clearPendingTimers() {
     clearTimeout(newHighscoreTimeoutId);
     newHighscoreTimeoutId = null;
   }
+
+  clearPressureModeTimer();
 }
 
 function setGameActive(active) {
@@ -600,11 +627,16 @@ function setGameActive(active) {
     counter.textContent = '0';
     resetDotColors();
     resetDots();
+    clearPressureModeTimer();
     updateSplitTargetHighlight();
     stopAllMovement();
+    if (isPressureMode()) {
+      startPressureModeTimer();
+    }
     void updateTicker();
   } else {
     clearPendingTimers();
+    clearPressureModeTimer();
     stopAllMovement();
     splitSequenceLastTappedSide = null;
     updateSplitTargetHighlight();
@@ -631,12 +663,14 @@ async function updateTicker() {
       ...currentUser,
       highscores: {
         normal: Math.max(getScore(currentUser, 'normal'), getScore(remoteUser.record, 'normal')),
-        split: Math.max(getScore(currentUser, 'split'), getScore(remoteUser.record, 'split'))
+        split: Math.max(getScore(currentUser, 'split'), getScore(remoteUser.record, 'split')),
+        pressure: Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser.record, 'pressure'))
       }
     });
 
     upsertUserCache(currentUser.name, 'normal', getScore(currentUser, 'normal'));
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
+    upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
     updateCurrentUserHighscoreDisplay();
   }
 }
@@ -864,6 +898,94 @@ function stopAllMovement() {
   movementStates.clear();
 }
 
+
+function clearPressureTensionClasses() {
+  dot.classList.remove(...pressureModeClasses);
+}
+
+function updatePressureTensionVisual() {
+  clearPressureTensionClasses();
+  if (!isPressureMode() || !gameActive || !pressureModeStartedAt) return;
+
+  const elapsed = Date.now() - pressureModeStartedAt;
+  const ratio = Math.min(1, elapsed / pressureModeTimeLimitMs);
+
+  if (ratio >= 0.66) {
+    dot.classList.add('pressure-tension-high');
+  } else if (ratio >= 0.33) {
+    dot.classList.add('pressure-tension-medium');
+  } else {
+    dot.classList.add('pressure-tension-low');
+  }
+}
+
+function clearPressureModeTimer() {
+  if (pressureModeTimerId) {
+    clearInterval(pressureModeTimerId);
+    pressureModeTimerId = null;
+  }
+  pressureModeStartedAt = 0;
+  clearPressureTensionClasses();
+  dot.classList.remove('pressure-explode');
+}
+
+function resetRoundToCenterWithTryAgain() {
+  taps = 0;
+  misses = 0;
+  triggerResetHaptic();
+  splitSequenceLastTappedSide = null;
+  counter.textContent = '0';
+  hideMissIndicator();
+  resetDotColors();
+  resetDots();
+  clearPressureModeTimer();
+  requestAnimationFrame(() => {
+    showTryAgainMessage();
+  });
+  hasRoundStarted = false;
+  hideNewHighscoreMessage();
+  updateSplitTargetHighlight();
+
+  if (isPressureMode() && gameActive) {
+    startPressureModeTimer();
+  }
+}
+
+function triggerPressureExplosion() {
+  if (!gameActive || !isPressureMode()) return;
+
+  clearPressureModeTimer();
+  dot.classList.add('pressure-explode');
+
+  setTimeout(() => {
+    dot.classList.remove('pressure-explode');
+    if (!gameActive || !isPressureMode()) return;
+    resetRoundToCenterWithTryAgain();
+  }, 420);
+}
+
+function startPressureModeTimer() {
+  if (!gameActive || !isPressureMode()) return;
+
+  clearPressureModeTimer();
+  pressureModeStartedAt = Date.now();
+  updatePressureTensionVisual();
+
+  pressureModeTimerId = setInterval(() => {
+    if (!gameActive || !isPressureMode()) {
+      clearPressureModeTimer();
+      return;
+    }
+
+    const elapsed = Date.now() - pressureModeStartedAt;
+    if (elapsed >= pressureModeTimeLimitMs) {
+      triggerPressureExplosion();
+      return;
+    }
+
+    updatePressureTensionVisual();
+  }, 60);
+}
 function updateDotColorByTaps() {
   const nextColorIndex = Math.floor(taps / 10) % warmDotColors.length;
   if (nextColorIndex === currentDotColorIndex) return;
@@ -889,6 +1011,10 @@ function hitDot() {
   updateDotColorByTaps();
   updateCurrentUserHighscore(taps);
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
+
+  if (isPressureMode()) {
+    startPressureModeTimer();
+  }
 }
 
 function getInteractionPoints(event) {
@@ -1072,20 +1198,7 @@ function handleTap(event) {
 
     missResetMoveTimeoutId = setTimeout(() => {
       missResetMoveTimeoutId = null;
-      taps = 0;
-      misses = 0;
-      triggerResetHaptic();
-      splitSequenceLastTappedSide = null;
-      counter.textContent = '0';
-      hideMissIndicator();
-      resetDotColors();
-      resetDots();
-      requestAnimationFrame(() => {
-        showTryAgainMessage();
-      });
-      hasRoundStarted = false;
-      hideNewHighscoreMessage();
-      updateSplitTargetHighlight();
+      resetRoundToCenterWithTryAgain();
     }, 420);
   }
 }
@@ -1097,6 +1210,14 @@ function closeSplitHint() {
 
 function showSplitHint() {
   splitHintOverlay.classList.remove('hidden');
+}
+
+function closePressureHint() {
+  pressureHintOverlay.classList.add('hidden');
+}
+
+function showPressureHint() {
+  pressureHintOverlay.classList.remove('hidden');
 }
 
 function applyMode(mode) {
@@ -1185,6 +1306,12 @@ modeSplitButton.addEventListener('click', () => {
   showSplitHint();
 });
 
+modePressureButton.addEventListener('click', () => {
+  applyMode('pressure');
+  setGameActive(true);
+  showPressureHint();
+});
+
 modeBackButton.addEventListener('click', () => {
   showStartMenu();
 });
@@ -1208,6 +1335,12 @@ highscoreModeSplitButton.addEventListener('click', async (event) => {
   await showHighscoreOverlay();
 });
 
+highscoreModePressureButton.addEventListener('click', async (event) => {
+  event.preventDefault();
+  setHighscoreMode('pressure');
+  await showHighscoreOverlay();
+});
+
 highscoreCloseButton.addEventListener('click', (event) => {
   event.preventDefault();
   hideHighscoreOverlay();
@@ -1228,6 +1361,17 @@ splitHintCloseButton.addEventListener('click', (event) => {
 splitHintOverlay.addEventListener('click', (event) => {
   if (event.target === splitHintOverlay) {
     closeSplitHint();
+  }
+});
+
+pressureHintCloseButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  closePressureHint();
+});
+
+pressureHintOverlay.addEventListener('click', (event) => {
+  if (event.target === pressureHintOverlay) {
+    closePressureHint();
   }
 });
 

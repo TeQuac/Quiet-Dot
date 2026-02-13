@@ -52,7 +52,7 @@
     <button id="highscore-button" type="button" aria-label="Top-10-Highscores öffnen">🏆</button>
     <header id="start-header">
       <div id="username-label"><span id="username-value"></span></div>
-      <div id="user-highscore">Normal: <span id="user-highscore-normal">0</span> | Split: <span id="user-highscore-split">0</span></div>
+      <div id="user-highscore">Normal: <span id="user-highscore-normal">0</span> | Split: <span id="user-highscore-split">0</span> | Druck: <span id="user-highscore-pressure">0</span></div>
     </header>
 
     <button id="start-button" type="button">Start</button>
@@ -67,6 +67,7 @@
       <div class="highscore-mode-selector" role="tablist" aria-label="Spielmodi für Highscores">
         <button id="highscore-mode-normal" type="button" role="tab" aria-selected="true">Normal</button>
         <button id="highscore-mode-split" type="button" role="tab" aria-selected="false">Split</button>
+        <button id="highscore-mode-pressure" type="button" role="tab" aria-selected="false">Druck</button>
       </div>
       <ol id="highscore-list"></ol>
       <p id="highscore-empty" class="hidden">Noch keine Highscores vorhanden.</p>
@@ -110,10 +111,20 @@
   <div id="mode-screen" class="hidden" aria-live="polite">
     <div class="card mode-card">
       <h2>Spielmodus wählen</h2>
-      <p>Normal: Ein Punkt über das ganze Feld.<br>Split: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.</p>
+      <p>Normal: Ein Punkt über das ganze Feld.<br>Split: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.<br>Druck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.</p>
       <button id="mode-normal" type="button">Normal</button>
       <button id="mode-split" type="button">Split</button>
+      <button id="mode-pressure" type="button">Druck</button>
       <button id="mode-back" type="button" class="secondary">Zurück</button>
+    </div>
+  </div>
+
+  <div id="pressure-hint-overlay" class="overlay hidden" aria-live="polite">
+    <div class="card pressure-hint-card" role="dialog" aria-modal="true" aria-labelledby="pressure-hint-title">
+      <h2 id="pressure-hint-title">Druck-Modus</h2>
+      <p>Du spielst wie im Normal-Modus, aber jeder Punkt hat nur <strong>5 Sekunden</strong> Lebenszeit.</p>
+      <p>Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst explodiert er, es erscheint <strong>Try Again!</strong> und die Runde startet im Zentrum neu.</p>
+      <button id="pressure-hint-close" type="button">Los geht's</button>
     </div>
   </div>
 

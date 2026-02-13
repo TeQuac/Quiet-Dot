@@ -1,6 +1,6 @@
 # Supabase Setup (Silentap)
 
-Wenn der **Split-Mode-Highscore nicht userübergreifend** erscheint, fehlt meist die DB-Erweiterung für den Split-Score.
+Wenn der **Split-/Druck-Mode-Highscore nicht userübergreifend** erscheint, fehlt meist die DB-Erweiterung für Split-/Druck-Score.
 
 ## 1) SQL ausführen
 1. Supabase Dashboard → **SQL Editor**
@@ -8,7 +8,7 @@ Wenn der **Split-Mode-Highscore nicht userübergreifend** erscheint, fehlt meist
 
 Damit werden:
 - Tabelle `game_scores` abgesichert/ergänzt,
-- neue Spalte `split_highscore` ergänzt,
+- neue Spalten `split_highscore` und `pressure_highscore` ergänzt,
 - RPC `submit_score_mode(...)` angelegt,
 - Trigger für `updated_at` gesetzt,
 - RLS + Policies für Lesen und initiales Erstellen sichergestellt,
@@ -21,13 +21,14 @@ Hinweis: Die Migration verwendet absichtlich `drop policy if exists ...` + `crea
 Die App verwendet danach:
 - für **Normal**: `highscore`
 - für **Split**: `split_highscore`
+- für **Druck**: `pressure_highscore`
 
 Und sendet Scores über `submit_score_mode(p_username, p_mode, p_score)`.
 
 ## 3) Kurzer Funktionstest
-1. Mit User A im Split-Mode Punkte machen.
+1. Mit User A im Druck-Mode Punkte machen.
 2. Auf zweitem Gerät/Browser mit anderem User starten.
-3. In den Split-Mode wechseln → Top-10 sollte den Split-Score von User A enthalten.
+3. In den Druck-Mode wechseln → Top-10 sollte den Druck-Score von User A enthalten.
 
 ## 4) Fallback
 Falls die neue RPC noch nicht vorhanden ist, nutzt die App für Normal-Mode automatisch den Legacy-Call `submit_score` als Fallback.
