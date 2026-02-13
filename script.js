@@ -1185,8 +1185,8 @@ modeNormalButton.addEventListener('click', () => {
 
 modeSplitButton.addEventListener('click', () => {
   applyMode('split');
-  showSplitHint();
   setGameActive(true);
+  showSplitHint();
 });
 
 modeBackButton.addEventListener('click', () => {
