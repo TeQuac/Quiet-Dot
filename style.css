@@ -207,7 +207,7 @@ a {
 #settings-button {
   position: absolute;
   top: 16px;
-  right: 78px;
+  left: 16px;
   width: 52px;
   height: 52px;
   border-radius: 999px;
