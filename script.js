@@ -337,14 +337,18 @@ async function setUserPasswordRemote(name, passwordHash) {
 async function upsertUserHighscoreRemote(name, mode, score) {
   if (!supabaseClient) return ensureUserRecordShape({ name, highscores: { [mode]: score } });
 
-  const column = mode === 'split' ? 'split_highscore' : mode === 'pressure' ? 'pressure_highscore' : 'highscore';
-  const payload = { username: name, [column]: score };
+  let { data, error } = await supabaseClient.rpc('submit_score_mode', {
+    p_username: name,
+    p_mode: mode,
+    p_score: score
+  });
 
-  const { data, error } = await supabaseClient
-    .from('game_scores')
-    .upsert(payload, { onConflict: 'username' })
-    .select('username, highscore, split_highscore, pressure_highscore')
-    .single();
+  if (error && mode === 'normal' && /submit_score_mode/i.test(error.message || '')) {
+    ({ data, error } = await supabaseClient.rpc('submit_score', {
+      p_username: name,
+      p_score: score
+    }));
+  }
 
   if (error) {
     throw new Error(error.message || 'Highscore konnte nicht gespeichert werden');
