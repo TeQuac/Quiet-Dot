@@ -1476,6 +1476,7 @@ usernameForm.addEventListener('submit', async (event) => {
 
       upsertUserCache(authUser.record.name, 'normal', getScore(authUser.record, 'normal'));
       upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
+      upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
       setCurrentUser(authUser.record);
       await updateTicker();
       showStartMenu();
@@ -1503,6 +1504,7 @@ usernameForm.addEventListener('submit', async (event) => {
 
     upsertUserCache(authUser.record.name, 'normal', getScore(authUser.record, 'normal'));
     upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
+    upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
     setCurrentUser(authUser.record);
     await updateTicker();
     showStartMenu();
