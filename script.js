@@ -99,6 +99,9 @@ const movementAnimations = new Map();
 const movementStates = new Map();
 const maxDotVelocity = 4.8;
 const pressureModeTimeLimitMs = 5000;
+const movementInsetRatioX = 0.08;
+const movementInsetRatioY = 0.06;
+const teleportRangeRatio = 0.55;
 
 const warmDotColors = [
   '#1f2937', '#8b5e3c', '#a05d4e', '#b66a50', '#c9785a', '#d08a62', '#9f7a57', '#c17f59', '#b5835a', '#7a5c4a', '#94624e'
@@ -754,18 +757,62 @@ function getViewportSize() {
   };
 }
 
+function getVisibleRect(element) {
+  if (!element || element.hidden || element.classList.contains('hidden')) return null;
+
+  const rect = element.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  return rect;
+}
+
+function getVerticalSafeLimits(dotSize, viewportHeight, padding) {
+  const topRects = [counter, newHighscoreDisplay, tryAgainMessage]
+    .map(getVisibleRect)
+    .filter(Boolean);
+  const bottomRects = [donate, backToMenu]
+    .map(getVisibleRect)
+    .filter(Boolean);
+
+  const highestTopBoundary = topRects.length
+    ? Math.max(...topRects.map((rect) => rect.bottom)) + padding
+    : padding;
+  const lowestBottomBoundary = bottomRects.length
+    ? Math.min(...bottomRects.map((rect) => rect.top)) - dotSize - padding
+    : viewportHeight - dotSize - padding;
+
+  return {
+    minY: Math.max(padding, highestTopBoundary),
+    maxY: Math.max(padding, Math.min(viewportHeight - dotSize - padding, lowestBottomBoundary))
+  };
+}
+
 function getBoundsForDot(dotElement) {
   const padding = 10;
   const dotSize = dotElement.offsetWidth;
   const { width: viewportWidth, height: viewportHeight } = getViewportSize();
+  const safeVerticalLimits = getVerticalSafeLimits(dotSize, viewportHeight, padding);
+
+  const applyMovementInsets = (rawBounds) => {
+    const horizontalRange = Math.max(0, rawBounds.maxX - rawBounds.minX);
+    const verticalRange = Math.max(0, rawBounds.maxY - rawBounds.minY);
+    const insetX = horizontalRange * movementInsetRatioX;
+    const insetY = verticalRange * movementInsetRatioY;
+
+    const minX = Math.min(rawBounds.maxX, rawBounds.minX + insetX);
+    const maxX = Math.max(minX, rawBounds.maxX - insetX);
+    const minY = Math.min(rawBounds.maxY, rawBounds.minY + insetY);
+    const maxY = Math.max(minY, rawBounds.maxY - insetY);
+
+    return { minX, minY, maxX, maxY };
+  };
 
   if (currentMode !== 'split') {
-    return {
+    return applyMovementInsets({
       minX: padding,
-      minY: padding,
+      minY: safeVerticalLimits.minY,
       maxX: Math.max(padding, viewportWidth - dotSize - padding),
-      maxY: Math.max(padding, viewportHeight - dotSize - padding)
-    };
+      maxY: Math.max(safeVerticalLimits.minY, safeVerticalLimits.maxY)
+    });
   }
 
   const dividerWidth = splitDivider.offsetWidth || 14;
@@ -775,12 +822,12 @@ function getBoundsForDot(dotElement) {
 
   const isLeftDot = dotElement === dot;
 
-  return {
+  return applyMovementInsets({
     minX: isLeftDot ? padding : rightHalfMinX,
-    minY: padding,
+    minY: safeVerticalLimits.minY,
     maxX: isLeftDot ? Math.max(padding, leftHalfMaxX) : Math.max(rightHalfMinX, viewportWidth - dotSize - padding),
-    maxY: Math.max(padding, viewportHeight - dotSize - padding)
-  };
+    maxY: Math.max(safeVerticalLimits.minY, safeVerticalLimits.maxY)
+  });
 }
 
 function startMovement(dotElement, previousPosition, nextPosition) {
@@ -848,6 +895,11 @@ function moveDot(dotElement) {
   for (let attempt = 0; attempt < 25; attempt++) {
     const candidateX = Math.random() * (bounds.maxX - bounds.minX) + bounds.minX;
     const candidateY = Math.random() * (bounds.maxY - bounds.minY) + bounds.minY;
+    const distanceToPrevious = Math.hypot(candidateX - previousPosition.left, candidateY - previousPosition.top);
+    const allowedTeleportDistance = Math.max(
+      dotSize * 1.8,
+      Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * teleportRangeRatio
+    );
     const dotRect = {
       left: candidateX,
       right: candidateX + dotSize,
@@ -856,6 +908,7 @@ function moveDot(dotElement) {
     };
 
     const overlapsAvoid = avoidRects.some((rect) => overlapsRect(dotRect, rect));
+    if (distanceToPrevious > allowedTeleportDistance) continue;
     newX = candidateX;
     newY = candidateY;
     if (!overlapsAvoid) break;
