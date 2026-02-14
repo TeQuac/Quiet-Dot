@@ -184,7 +184,7 @@ modeNormal: 'Обычный',
 modeSplit: 'Двойной',
 modePressure: 'Давление',
 modePressureLabel: 'Давление'
-
+  },
 };
 
 let currentLanguage = localStorage.getItem(storageKeys.language) || 'de';
