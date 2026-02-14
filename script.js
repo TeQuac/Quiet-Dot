@@ -779,7 +779,7 @@ function getBlockingRects() {
 }
 
 function getBoundsForDot(dotElement) {
-  const padding = 10;
+  const padding = 0;
   const dotSize = dotElement.offsetWidth;
   const { width: viewportWidth, height: viewportHeight } = getViewportSize();
   const applyMovementInsets = (rawBounds) => {
