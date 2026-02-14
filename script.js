@@ -973,7 +973,7 @@ function showNewHighscoreMessage() {
 
   newHighscoreTimeoutId = setTimeout(() => {
     hideNewHighscoreMessage();
-  }, 1800);
+  }, 5000);
 }
 
 function hideNewHighscoreMessage() {
