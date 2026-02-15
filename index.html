@@ -11,6 +11,35 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="intro-overlay" class="overlay hidden" aria-live="polite">
+    <div class="card intro-card" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+      <h2 id="intro-title">Willkommen bei Silentap 👋</h2>
+      <p id="intro-lead">Kurze Demo vor dem Login:</p>
+
+      <div class="intro-preview" aria-hidden="true">
+        <div class="intro-preview-label" id="intro-preview-label">Normal</div>
+        <div class="intro-preview-stage" id="intro-preview-stage" data-mode="normal">
+          <div class="intro-preview-divider"></div>
+          <span class="intro-preview-dot intro-dot-main"></span>
+          <span class="intro-preview-dot intro-dot-split"></span>
+          <span class="intro-preview-pulse"></span>
+          <span class="intro-preview-timer"></span>
+        </div>
+      </div>
+      <ul class="intro-mode-list">
+        <li><strong>Normal:</strong> Ein Punkt erscheint irgendwo auf dem Feld. Tippe ihn so schnell wie möglich an.</li>
+        <li><strong>Split:</strong> Zwei Punkte (links/rechts). Ein Punkt zählt nur, wenn du abwechselnd beide Seiten triffst.</li>
+        <li><strong>Druck:</strong> Wie Normal, aber jeder Punkt lebt nur 5 Sekunden und explodiert sonst.</li>
+      </ul>
+      <p class="intro-question">Möchtest du Silentap jetzt spielen?</p>
+      <div class="intro-actions">
+        <button id="intro-accept" type="button">Ja, spielen</button>
+        <button id="intro-decline" type="button" class="secondary">Nein, schließen</button>
+      </div>
+      <div id="intro-close-hint" class="hidden" role="status">Der Tab konnte nicht automatisch geschlossen werden. Du kannst ihn jetzt manuell schließen.</div>
+    </div>
+  </div>
+
   <div id="username-overlay" class="overlay hidden" aria-live="polite">
     <form id="username-form" class="card" novalidate>
       <h2 id="auth-title">Willkommen bei Silentap</h2>

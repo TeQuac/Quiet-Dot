@@ -8,6 +8,13 @@ const tryAgainMessage = document.getElementById('try-again');
 const donate = document.getElementById('donate');
 const backToMenu = document.getElementById('back-to-menu');
 
+const introOverlay = document.getElementById('intro-overlay');
+const introAcceptButton = document.getElementById('intro-accept');
+const introDeclineButton = document.getElementById('intro-decline');
+const introCloseHint = document.getElementById('intro-close-hint');
+const introPreviewLabel = document.getElementById('intro-preview-label');
+const introPreviewStage = document.getElementById('intro-preview-stage');
+
 const usernameOverlay = document.getElementById('username-overlay');
 const usernameForm = document.getElementById('username-form');
 const usernameInput = document.getElementById('username-input');
@@ -66,7 +73,8 @@ const pressureHintCloseButton = document.getElementById('pressure-hint-close');
 const storageKeys = {
   users: 'silentapUsers',
   currentUser: 'silentapCurrentUser',
-  language: 'silentapLanguage'
+  language: 'silentapLanguage',
+  introSeen: 'silentapIntroSeen'
 };
 
 const gameModes = {
@@ -105,7 +113,13 @@ const translations = {
     letsGo: "Los geht's", newHighscore: 'Highscore!', tryAgain: 'Nochmal!', backToMenu: '← Startmenü', support: '☕️ Support',
     alertFeedbackOffline: 'Feedback konnte nicht gesendet werden: keine Verbindung verfügbar.', alertFeedbackError: 'Feedback konnte nicht gesendet werden. Bitte versuche es später erneut.', alertFeedbackSent: 'Vielen Dank! Dein Feedback wurde gesendet.',
     errFeedbackMinLength: 'Bitte mindestens 3 Zeichen eingeben.', errUsernameMin: 'Username muss mindestens 3 Zeichen lang sein.', errPasswordMin: 'Passwort muss mindestens 4 Zeichen lang sein.', errPasswordMismatch: 'Passwörter stimmen nicht überein.', errUsernameTaken: 'Dieser Username ist bereits vergeben.', errUserSave: 'User konnte nicht gespeichert werden. Bitte versuche es erneut.', errUserNotFound: 'User nicht gefunden. Bitte registrieren.', errPasswordWrong: 'Passwort ist nicht korrekt.', errLoginFailed: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
-    modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Druck', modePressureLabel: 'Druck'
+    modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Druck', modePressureLabel: 'Druck',
+    introTitle: 'Willkommen bei Silentap 👋', introLead: 'Kurze Demo vor dem Login:',
+    introModeNormal: 'Normal: Ein Punkt erscheint irgendwo auf dem Feld. Tippe ihn so schnell wie möglich an.',
+    introModeSplit: 'Split: Zwei Punkte (links/rechts). Ein Punkt zählt nur, wenn du abwechselnd beide Seiten triffst.',
+    introModePressure: 'Druck: Wie Normal, aber jeder Punkt lebt nur 5 Sekunden und explodiert sonst.',
+    introQuestion: 'Möchtest du Silentap jetzt spielen?', introAccept: 'Ja, spielen', introDecline: 'Nein, schließen',
+    introCloseHint: 'Der Tab konnte nicht automatisch geschlossen werden. Du kannst ihn jetzt manuell schließen.'
   },
   en: {
     authWelcome: 'Welcome to Silentap', authLoginTitle: 'Sign in to Silentap', authRegisterDescription: 'Choose a username and sign in with a password.', authLoginDescription: 'Sign in with username and password.',
@@ -116,7 +130,13 @@ const translations = {
     splitHintTitle: 'Split mode scoring', splitHintText: 'A point only counts if both dots are hit consecutively – order does not matter.', splitCounts: '✅ counts', splitNoCount: '❌ does not count', understood: 'Understood',
     modeChoose: 'Choose game mode', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
     alertFeedbackOffline: 'Feedback could not be sent: no connection available.', alertFeedbackError: 'Feedback could not be sent. Please try again later.', alertFeedbackSent: 'Thank you! Your feedback has been sent.',
-    errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure'
+    errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure',
+    introTitle: 'Welcome to Silentap 👋', introLead: 'Quick demo before login:',
+    introModeNormal: 'Normal: One dot appears anywhere on the field. Tap it as quickly as possible.',
+    introModeSplit: 'Split: Two dots (left/right). A point counts only when you alternate between both sides.',
+    introModePressure: 'Pressure: Like Normal, but each dot only lives for 5 seconds and explodes otherwise.',
+    introQuestion: 'Do you want to play Silentap now?', introAccept: 'Yes, play', introDecline: 'No, close',
+    introCloseHint: 'The tab could not be closed automatically. Please close it manually.'
   },
   ru: {
     authWelcome: 'Добро пожаловать в Silentap',
@@ -190,6 +210,9 @@ modePressureLabel: 'Давление'
 let currentLanguage = localStorage.getItem(storageKeys.language) || 'de';
 if (!supportedLanguages.includes(currentLanguage)) currentLanguage = 'de';
 let translationCache = {};
+let introDemoIntervalId = null;
+let introDemoModeIndex = 0;
+const introDemoModes = ['normal', 'split', 'pressure'];
 
 function template(text, vars = {}) {
   return text.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? ''));
@@ -246,6 +269,18 @@ async function setLanguage(language) {
 
 function applyTranslations() {
   document.documentElement.lang = currentLanguage;
+
+  document.getElementById('intro-title').textContent = t('introTitle');
+  document.getElementById('intro-lead').textContent = t('introLead');
+  const introModeItems = document.querySelectorAll('.intro-mode-list li');
+  if (introModeItems[0]) introModeItems[0].innerHTML = `<strong>${t('modeNormal')}:</strong> ${t('introModeNormal').replace(/^Normal:\s*/, '')}`;
+  if (introModeItems[1]) introModeItems[1].innerHTML = `<strong>${t('modeSplit')}:</strong> ${t('introModeSplit').replace(/^Split:\s*/, '')}`;
+  if (introModeItems[2]) introModeItems[2].innerHTML = `<strong>${t('modePressureLabel')}:</strong> ${t('introModePressure').replace(/^[^:]+:\s*/, '')}`;
+  document.querySelector('.intro-question').textContent = t('introQuestion');
+  introAcceptButton.textContent = t('introAccept');
+  introDeclineButton.textContent = t('introDecline');
+  introCloseHint.textContent = t('introCloseHint');
+  updateIntroDemoVisual(false);
 
   authRegisterButton.textContent = t('newUser');
   authLoginButton.textContent = t('login');
@@ -945,6 +980,65 @@ async function updateTicker() {
     upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
     updateCurrentUserHighscoreDisplay();
   }
+}
+
+
+
+function setIntroDemoMode(mode) {
+  const modeKey = introDemoModes.includes(mode) ? mode : 'normal';
+  introPreviewStage.dataset.mode = modeKey;
+  introPreviewLabel.textContent = t(gameModes[modeKey].labelKey);
+}
+
+function updateIntroDemoVisual(advance = true) {
+  if (advance) {
+    introDemoModeIndex = (introDemoModeIndex + 1) % introDemoModes.length;
+  }
+  setIntroDemoMode(introDemoModes[introDemoModeIndex]);
+}
+
+function startIntroDemoLoop() {
+  if (introDemoIntervalId) return;
+  updateIntroDemoVisual(false);
+  introDemoIntervalId = setInterval(() => {
+    updateIntroDemoVisual(true);
+  }, 2400);
+}
+
+function stopIntroDemoLoop() {
+  if (!introDemoIntervalId) return;
+  clearInterval(introDemoIntervalId);
+  introDemoIntervalId = null;
+}
+
+function showIntroOverlay() {
+  introCloseHint.classList.add('hidden');
+  introOverlay.classList.remove('hidden');
+  startIntroDemoLoop();
+}
+
+function hideIntroOverlay() {
+  introOverlay.classList.add('hidden');
+  stopIntroDemoLoop();
+}
+
+function tryCloseAppTab() {
+  window.close();
+  setTimeout(() => {
+    if (!document.hidden) {
+      introCloseHint.classList.remove('hidden');
+    }
+  }, 200);
+}
+
+function initAppFlow() {
+  const hasSeenIntro = localStorage.getItem(storageKeys.introSeen) === '1';
+  if (!hasSeenIntro) {
+    showIntroOverlay();
+    return;
+  }
+
+  initUserFlow();
 }
 
 function initUserFlow() {
@@ -1749,6 +1843,18 @@ pressureHintOverlay.addEventListener('click', (event) => {
 });
 
 
+introAcceptButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  localStorage.setItem(storageKeys.introSeen, '1');
+  hideIntroOverlay();
+  initUserFlow();
+});
+
+introDeclineButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  tryCloseAppTab();
+});
+
 backToMenu.addEventListener('click', (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -1913,4 +2019,4 @@ usernameForm.addEventListener('submit', async (event) => {
 
 setGameActive(false);
 applyTranslations();
-initUserFlow();
+initAppFlow();
