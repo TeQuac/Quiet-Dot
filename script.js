@@ -554,6 +554,8 @@ const blackholeSuctionIncreasePerTap = 0.05;
 const blackholeCaptureDistanceFactor = 0.42;
 let blackholeSuctionMultiplier = blackholeBaseSuction;
 let blackholeCaptureInProgress = false;
+let modeStartInProgress = false;
+let modeStartAnimationFrameId = null;
 
 function ensureUserRecordShape(user) {
   const highscores = {
@@ -947,8 +949,17 @@ function storeCurrentUserName(name) {
 
 function setCurrentUser(user) {
   currentUser = user ? ensureUserRecordShape(user) : null;
-  usernameValue.textContent = currentUser?.name || '';
+  updateCurrentUserHighscoreDisplay();
   storeCurrentUserName(currentUser?.name || '');
+}
+
+function updateCurrentUserHighscoreDisplay() {
+  if (!currentUser) {
+    usernameValue.textContent = '';
+    return;
+  }
+
+  usernameValue.textContent = `${currentUser.name} · N:${getScore(currentUser, 'normal')} S:${getScore(currentUser, 'split')} P:${getScore(currentUser, 'pressure')} B:${getScore(currentUser, 'blackhole')}`;
 }
 
 async function updateCurrentUserHighscore(score) {
@@ -1154,6 +1165,13 @@ async function cycleLanguage() {
 }
 
 function clearPendingTimers() {
+  if (modeStartAnimationFrameId) {
+    cancelAnimationFrame(modeStartAnimationFrameId);
+    modeStartAnimationFrameId = null;
+  }
+  modeStartInProgress = false;
+  clearModeStartAnimation();
+
   if (missResetMoveTimeoutId) {
     clearTimeout(missResetMoveTimeoutId);
     missResetMoveTimeoutId = null;
@@ -1170,6 +1188,54 @@ function clearPendingTimers() {
   }
 
   clearPressureModeTimer();
+}
+
+function clearModeStartAnimation() {
+  getDotsForMode().forEach((dotElement) => {
+    dotElement.classList.remove('mode-start-animation');
+  });
+}
+
+function startSelectedMode(mode) {
+  if (modeStartInProgress) return;
+
+  modeStartInProgress = true;
+  applyMode(mode);
+  closeSplitHint();
+  closePressureHint();
+  closeBlackholeHint();
+  modeScreen.classList.add('hidden');
+  showGameElements();
+  resetDotColors();
+  resetDots();
+  hideTryAgainMessage();
+  hideMissIndicator();
+  clearModeStartAnimation();
+
+  const modeDots = getDotsForMode();
+  modeDots.forEach((dotElement) => {
+    dotElement.classList.add('mode-start-animation');
+  });
+
+  const animationDurationMs = 650;
+  const animationStartedAt = performance.now();
+
+  const finishModeStart = (now) => {
+    if (!modeStartInProgress) return;
+
+    const elapsed = now - animationStartedAt;
+    if (elapsed >= animationDurationMs) {
+      modeStartAnimationFrameId = null;
+      clearModeStartAnimation();
+      modeStartInProgress = false;
+      setGameActive(true);
+      return;
+    }
+
+    modeStartAnimationFrameId = requestAnimationFrame(finishModeStart);
+  };
+
+  modeStartAnimationFrameId = requestAnimationFrame(finishModeStart);
 }
 
 function setGameActive(active) {
@@ -2175,27 +2241,40 @@ startButton.addEventListener('touchstart', (event) => {
 }, { passive: false });
 
 modeNormalButton.addEventListener('click', () => {
-  applyMode('normal');
-  setGameActive(true);
+  startSelectedMode('normal');
 });
 
 modeSplitButton.addEventListener('click', () => {
-  applyMode('split');
-  setGameActive(true);
-  showSplitHint();
+  startSelectedMode('split');
 });
 
 modePressureButton.addEventListener('click', () => {
-  applyMode('pressure');
-  setGameActive(true);
-  showPressureHint();
+  startSelectedMode('pressure');
 });
 
 modeBlackholeButton.addEventListener('click', () => {
-  applyMode('blackhole');
-  setGameActive(true);
-  showBlackholeHint();
+  startSelectedMode('blackhole');
 });
+
+modeNormalButton.addEventListener('touchstart', (event) => {
+  event.preventDefault();
+  startSelectedMode('normal');
+}, { passive: false });
+
+modeSplitButton.addEventListener('touchstart', (event) => {
+  event.preventDefault();
+  startSelectedMode('split');
+}, { passive: false });
+
+modePressureButton.addEventListener('touchstart', (event) => {
+  event.preventDefault();
+  startSelectedMode('pressure');
+}, { passive: false });
+
+modeBlackholeButton.addEventListener('touchstart', (event) => {
+  event.preventDefault();
+  startSelectedMode('blackhole');
+}, { passive: false });
 
 modeBackButton.addEventListener('click', () => {
   showStartMenu();

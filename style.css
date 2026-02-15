@@ -731,6 +731,28 @@ a {
   z-index: 10;
 }
 
+#dot.mode-start-animation,
+#dot-split.mode-start-animation {
+  animation: modeStartPulse 0.65s ease-out;
+}
+
+@keyframes modeStartPulse {
+  0% {
+    transform: scale(0.25);
+    opacity: 0.3;
+  }
+
+  55% {
+    transform: scale(1.16);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 #blackhole {
   position: fixed;
   left: 50%;
