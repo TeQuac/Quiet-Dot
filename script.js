@@ -70,6 +70,12 @@ const modeSplitButton = document.getElementById('mode-split');
 const modePressureButton = document.getElementById('mode-pressure');
 const modeBlackholeButton = document.getElementById('mode-blackhole');
 const modeBackButton = document.getElementById('mode-back');
+const modeExplainOverlay = document.getElementById('mode-explain-overlay');
+const modeExplainTitle = document.getElementById('mode-explain-title');
+const modeExplainDescription = document.getElementById('mode-explain-description');
+const modeExplainAnimation = document.getElementById('mode-explain-animation');
+const modeExplainBackButton = document.getElementById('mode-explain-back');
+const modeExplainStartButton = document.getElementById('mode-explain-start');
 const splitHintOverlay = document.getElementById('split-hint-overlay');
 const splitHintCloseButton = document.getElementById('split-hint-close');
 const pressureHintOverlay = document.getElementById('pressure-hint-overlay');
@@ -117,6 +123,11 @@ const translations = {
     splitHintTitle: 'Split-Modus Wertung', splitHintText: 'Ein Punkt zählt nur, wenn beide Punkte nacheinander getroffen werden – Reihenfolge egal.',
     splitCounts: '✅ zählt', splitNoCount: '❌ zählt nicht', understood: 'Verstanden',
     modeChoose: 'Spielmodus wählen', modeVisualHint: 'Auswahl wird durch Animationen erklärt.', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.\nSchwarzes Loch: Der Dot teleportiert nach oben und wird von unten angesaugt. Jeder Treffer erhöht die Saugkraft um 5%.',
+    modeExplainTitle: 'So funktioniert {mode}', modeExplainStart: 'Spiel starten', modeExplainBack: 'Zurück',
+    modeExplainNormal: 'Ein Punkt bewegt sich frei über das Feld. Jeder Treffer gibt einen Punkt.',
+    modeExplainSplit: 'Treffe links und rechts abwechselnd. Nur der Wechsel zwischen den Seiten zählt.',
+    modeExplainPressure: 'Wie Normal, aber jeder Punkt muss innerhalb von 5 Sekunden getroffen werden.',
+    modeExplainBlackhole: 'Der Punkt wird nach unten gezogen. Mit jedem Treffer steigt die Sogkraft.',
     back: 'Zurück', pressureHintTitle: 'Druck-Modus', pressureHintText1: 'Du spielst wie im Normal-Modus, aber jeder Punkt hat nur 5 Sekunden Lebenszeit.', pressureHintText2: 'Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst explodiert er!', blackholeHintTitle: 'Schwarzes-Loch-Modus', blackholeHintText1: 'Der Dot startet in der Mitte und teleportiert bei jedem Treffer nach oben in eine zufällige Richtung.', blackholeHintText2: 'Unten rotiert ein Schwarzes Loch, das den Dot ansaugt. Jede Berührung erhöht die Saugkraft um 5%.',
     letsGo: "Los geht's", newHighscore: 'Highscore!', tryAgain: 'Nochmal!', backToMenu: '← Startmenü', support: '☕️ Support',
     alertFeedbackOffline: 'Feedback konnte nicht gesendet werden: keine Verbindung verfügbar.', alertFeedbackError: 'Feedback konnte nicht gesendet werden. Bitte versuche es später erneut.', alertFeedbackSent: 'Vielen Dank! Dein Feedback wurde gesendet.',
@@ -479,6 +490,9 @@ function applyTranslations() {
   modePressureButton.textContent = t('modePressureLabel');
   modeBlackholeButton.textContent = t('modeBlackhole');
   modeBackButton.textContent = t('back');
+  modeExplainBackButton.textContent = t('modeExplainBack');
+  modeExplainStartButton.textContent = t('modeExplainStart');
+  updateModeExplainOverlayContent(pendingModeForStart || currentMode);
 
   document.getElementById('pressure-hint-title').textContent = t('pressureHintTitle');
   pressureHintCloseButton.textContent = t('letsGo');
@@ -556,6 +570,7 @@ let blackholeSuctionMultiplier = blackholeBaseSuction;
 let blackholeCaptureInProgress = false;
 let modeStartInProgress = false;
 let modeStartAnimationFrameId = null;
+let pendingModeForStart = null;
 
 function ensureUserRecordShape(user) {
   const highscores = {
@@ -959,7 +974,7 @@ function updateCurrentUserHighscoreDisplay() {
     return;
   }
 
-  usernameValue.textContent = `${currentUser.name} · N:${getScore(currentUser, 'normal')} S:${getScore(currentUser, 'split')} P:${getScore(currentUser, 'pressure')} B:${getScore(currentUser, 'blackhole')}`;
+  usernameValue.textContent = currentUser.name;
 }
 
 async function updateCurrentUserHighscore(score) {
@@ -1041,6 +1056,7 @@ function updateModeButtons() {
 function showStartMenu() {
   startScreen.classList.remove('hidden');
   modeScreen.classList.add('hidden');
+  hideModeExplainOverlay();
   hideGameElements();
   closeSplitHint();
   closePressureHint();
@@ -1058,6 +1074,7 @@ function showStartMenu() {
 function showModeScreen() {
   startScreen.classList.add('hidden');
   modeScreen.classList.remove('hidden');
+  hideModeExplainOverlay();
   closeSplitHint();
   closePressureHint();
   closeBlackholeHint();
@@ -1196,6 +1213,33 @@ function clearModeStartAnimation() {
   });
 }
 
+
+function getModeExplainTextKey(mode) {
+  if (mode === 'split') return 'modeExplainSplit';
+  if (mode === 'pressure') return 'modeExplainPressure';
+  if (mode === 'blackhole') return 'modeExplainBlackhole';
+  return 'modeExplainNormal';
+}
+
+function updateModeExplainOverlayContent(mode) {
+  const safeMode = mode || 'normal';
+  const modeLabel = t(gameModes[safeMode]?.labelKey || 'modeNormal');
+  modeExplainTitle.textContent = t('modeExplainTitle', { mode: modeLabel });
+  modeExplainDescription.textContent = t(getModeExplainTextKey(safeMode));
+  modeExplainAnimation.dataset.mode = safeMode;
+}
+
+function showModeExplainOverlay(mode) {
+  pendingModeForStart = mode;
+  updateModeExplainOverlayContent(mode);
+  modeExplainOverlay.classList.remove('hidden');
+}
+
+function hideModeExplainOverlay() {
+  pendingModeForStart = null;
+  modeExplainOverlay.classList.add('hidden');
+}
+
 function startSelectedMode(mode) {
   if (modeStartInProgress) return;
 
@@ -1204,6 +1248,7 @@ function startSelectedMode(mode) {
   closeSplitHint();
   closePressureHint();
   closeBlackholeHint();
+  hideModeExplainOverlay();
   modeScreen.classList.add('hidden');
   showGameElements();
   resetDotColors();
@@ -1246,6 +1291,7 @@ function setGameActive(active) {
   if (gameActive) {
     startScreen.classList.add('hidden');
     modeScreen.classList.add('hidden');
+    hideModeExplainOverlay();
     closeSplitHint();
     showGameElements();
     taps = 0;
@@ -2241,40 +2287,60 @@ startButton.addEventListener('touchstart', (event) => {
 }, { passive: false });
 
 modeNormalButton.addEventListener('click', () => {
-  startSelectedMode('normal');
+  showModeExplainOverlay('normal');
 });
 
 modeSplitButton.addEventListener('click', () => {
-  startSelectedMode('split');
+  showModeExplainOverlay('split');
 });
 
 modePressureButton.addEventListener('click', () => {
-  startSelectedMode('pressure');
+  showModeExplainOverlay('pressure');
 });
 
 modeBlackholeButton.addEventListener('click', () => {
-  startSelectedMode('blackhole');
+  showModeExplainOverlay('blackhole');
 });
 
 modeNormalButton.addEventListener('touchstart', (event) => {
   event.preventDefault();
-  startSelectedMode('normal');
+  showModeExplainOverlay('normal');
 }, { passive: false });
 
 modeSplitButton.addEventListener('touchstart', (event) => {
   event.preventDefault();
-  startSelectedMode('split');
+  showModeExplainOverlay('split');
 }, { passive: false });
 
 modePressureButton.addEventListener('touchstart', (event) => {
   event.preventDefault();
-  startSelectedMode('pressure');
+  showModeExplainOverlay('pressure');
 }, { passive: false });
 
 modeBlackholeButton.addEventListener('touchstart', (event) => {
   event.preventDefault();
-  startSelectedMode('blackhole');
+  showModeExplainOverlay('blackhole');
 }, { passive: false });
+
+
+modeExplainBackButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  hideModeExplainOverlay();
+});
+
+modeExplainOverlay.addEventListener('click', (event) => {
+  if (event.target === modeExplainOverlay) {
+    hideModeExplainOverlay();
+  }
+});
+
+modeExplainStartButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  if (!pendingModeForStart) return;
+  startSelectedMode(pendingModeForStart);
+});
 
 modeBackButton.addEventListener('click', () => {
   showStartMenu();

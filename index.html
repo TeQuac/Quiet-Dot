@@ -156,6 +156,24 @@
     </div>
   </div>
 
+  <div id="mode-explain-overlay" class="overlay hidden" aria-live="polite">
+    <div class="card mode-explain-card" role="dialog" aria-modal="true" aria-labelledby="mode-explain-title">
+      <h2 id="mode-explain-title">So funktioniert der Modus</h2>
+      <p id="mode-explain-description">Kurze Animation zur Spielsystematik.</p>
+      <div id="mode-explain-animation" class="mode-explain-animation" data-mode="normal" aria-hidden="true">
+        <span class="mode-explain-dot"></span>
+        <span class="mode-explain-dot mode-explain-dot-right"></span>
+        <span class="mode-explain-divider"></span>
+        <span class="mode-explain-timer"></span>
+        <span class="mode-explain-blackhole"></span>
+      </div>
+      <div class="mode-explain-actions">
+        <button id="mode-explain-back" type="button" class="secondary">Zurück</button>
+        <button id="mode-explain-start" type="button">Spiel starten</button>
+      </div>
+    </div>
+  </div>
+
   <div id="pressure-hint-overlay" class="overlay hidden" aria-live="polite">
     <div class="card pressure-hint-card" role="dialog" aria-modal="true" aria-labelledby="pressure-hint-title">
       <h2 id="pressure-hint-title">Druck-Modus</h2>
