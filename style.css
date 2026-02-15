@@ -374,6 +374,14 @@ a {
   font-size: 14px;
 }
 
+.intro-install-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #536579;
+  text-align: left;
+  line-height: 1.4;
+}
+
 #start-screen,
 #mode-screen {
   position: fixed;
