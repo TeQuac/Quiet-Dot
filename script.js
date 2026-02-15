@@ -1508,12 +1508,22 @@ function triggerResetHaptic() {
   return patternTriggered;
 }
 
+function isElementVisible(element) {
+  return Boolean(element) && !element.hidden && !element.classList.contains('hidden');
+}
+
+function isGameplayOverlayOpen() {
+  return [splitHintOverlay, pressureHintOverlay, highscoreOverlay, settingsOverlay, feedbackOverlay, usernameOverlay]
+    .some((overlayElement) => isElementVisible(overlayElement));
+}
+
 function handleTap(event) {
   if (!gameActive) return;
+  if (isGameplayOverlayOpen()) return;
 
   const target = event.target;
   const touchedDotElement = target?.closest?.('#dot, #dot-split');
-  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #feedback-btn, #feedback-cancel, #feedback-submit');
+  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #mode-pressure, #feedback-btn, #feedback-cancel, #feedback-submit');
   if (isControlButton) return;
 
   const interactionPoints = getInteractionPoints(event);
