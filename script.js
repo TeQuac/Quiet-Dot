@@ -398,8 +398,8 @@ const resetVibrationPattern = [30, 40, 30];
 const resetVibrationDuration = 40;
 let currentDotColorIndex = 0;
 
-const alwaysVisibleInGame = [counter, donate, backToMenu];
-const avoidElements = [counter, newHighscoreDisplay, tryAgainMessage, donate, backToMenu];
+const alwaysVisibleInGame = [counter, backToMenu];
+const avoidElements = [counter, newHighscoreDisplay, tryAgainMessage, backToMenu];
 const pressureModeClasses = ['pressure-tension-low', 'pressure-tension-medium', 'pressure-tension-high'];
 
 function ensureUserRecordShape(user) {
