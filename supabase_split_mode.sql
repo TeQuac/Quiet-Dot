@@ -9,6 +9,7 @@ create table if not exists public.game_scores (
   highscore integer not null default 0 check (highscore >= 0),
   split_highscore integer not null default 0 check (split_highscore >= 0),
   pressure_highscore integer not null default 0 check (pressure_highscore >= 0),
+  blackhole_highscore integer not null default 0 check (blackhole_highscore >= 0),
   password_hash text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -19,6 +20,9 @@ alter table public.game_scores
 
 alter table public.game_scores
   add column if not exists pressure_highscore integer not null default 0 check (pressure_highscore >= 0);
+
+alter table public.game_scores
+  add column if not exists blackhole_highscore integer not null default 0 check (blackhole_highscore >= 0);
 
 alter table public.game_scores
   add column if not exists password_hash text;
@@ -32,6 +36,7 @@ alter table public.game_scores
 create index if not exists game_scores_highscore_idx on public.game_scores (highscore desc);
 create index if not exists game_scores_split_highscore_idx on public.game_scores (split_highscore desc);
 create index if not exists game_scores_pressure_highscore_idx on public.game_scores (pressure_highscore desc);
+create index if not exists game_scores_blackhole_highscore_idx on public.game_scores (blackhole_highscore desc);
 
 
 create table if not exists public.feedback_messages (
@@ -93,12 +98,12 @@ begin
     raise exception 'Score muss >= 0 sein';
   end if;
 
-  if v_mode not in ('normal', 'split', 'pressure') then
+  if v_mode not in ('normal', 'split', 'pressure', 'blackhole', 'schwarzes_loch', 'schwarzesloch') then
     raise exception 'Ungültiger Modus: %', p_mode;
   end if;
 
-  insert into public.game_scores (username, highscore, split_highscore, pressure_highscore)
-  values (trim(p_username), 0, 0, 0)
+  insert into public.game_scores (username, highscore, split_highscore, pressure_highscore, blackhole_highscore)
+  values (trim(p_username), 0, 0, 0, 0)
   on conflict (username) do nothing;
 
   if v_mode = 'normal' then
@@ -111,9 +116,14 @@ begin
     set split_highscore = greatest(split_highscore, p_score)
     where username = trim(p_username)
     returning * into v_row;
-  else
+  elsif v_mode = 'pressure' then
     update public.game_scores
     set pressure_highscore = greatest(pressure_highscore, p_score)
+    where username = trim(p_username)
+    returning * into v_row;
+  else
+    update public.game_scores
+    set blackhole_highscore = greatest(blackhole_highscore, p_score)
     where username = trim(p_username)
     returning * into v_row;
   end if;
@@ -140,7 +150,7 @@ create policy "game_scores_insert_initial"
 on public.game_scores
 for insert
 to anon, authenticated
-with check (highscore = 0 and split_highscore = 0 and pressure_highscore = 0);
+with check (highscore = 0 and split_highscore = 0 and pressure_highscore = 0 and blackhole_highscore = 0);
 
 
 drop policy if exists "game_scores_update_password" on public.game_scores;
@@ -153,6 +163,7 @@ with check (
   highscore >= 0
   and split_highscore >= 0
   and pressure_highscore >= 0
+  and blackhole_highscore >= 0
 );
 
 commit;
