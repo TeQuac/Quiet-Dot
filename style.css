@@ -517,12 +517,6 @@ a {
   font-weight: 800;
 }
 
-#user-highscore {
-  margin-top: 8px;
-  font-size: 17px;
-  color: #4f6072;
-}
-
 #start-button {
   padding: 13px 30px;
   border: none;
@@ -675,6 +669,20 @@ a {
   border-radius: 10px;
   background: #f5f9ff;
   border: 1px solid #dce6f2;
+}
+
+.highscore-entry.current-user {
+  background: #e8f3ff;
+  border-color: #8bb4e0;
+  box-shadow: inset 0 0 0 1px #6b9acb;
+}
+
+.highscore-separator {
+  list-style: none;
+  text-align: center;
+  color: #6f7f90;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .highscore-rank,

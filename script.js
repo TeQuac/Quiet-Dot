@@ -36,10 +36,6 @@ const settingsButton = document.getElementById('settings-button');
 const settingsCloseButton = document.getElementById('settings-close');
 const settingsLanguageButton = document.getElementById('settings-language-button');
 const settingsLanguageLabel = document.getElementById('settings-language-label');
-const userHighscoreNormalLabel = document.getElementById('user-highscore-normal-label');
-const userHighscoreSplitLabel = document.getElementById('user-highscore-split-label');
-const userHighscorePressureLabel = document.getElementById('user-highscore-pressure-label');
-const userHighscoreBlackholeLabel = document.getElementById('user-highscore-blackhole-label');
 const feedbackButton = document.getElementById('feedback-button');
 const feedbackForm = document.getElementById('feedback-form');
 const feedbackMessage = document.getElementById('feedback-message');
@@ -50,10 +46,6 @@ const startScreen = document.getElementById('start-screen');
 const startButton = document.getElementById('start-button');
 const switchUserButton = document.getElementById('switch-user-button');
 const usernameValue = document.getElementById('username-value');
-const userHighscoreNormal = document.getElementById('user-highscore-normal');
-const userHighscoreSplit = document.getElementById('user-highscore-split');
-const userHighscorePressure = document.getElementById('user-highscore-pressure');
-const userHighscoreBlackhole = document.getElementById('user-highscore-blackhole');
 const highscoreButton = document.getElementById('highscore-button');
 const highscoreOverlay = document.getElementById('highscore-overlay');
 const highscoreModeNormalButton = document.getElementById('highscore-mode-normal');
@@ -503,15 +495,9 @@ function applyTranslations() {
   donate.setAttribute('aria-label', t('support'));
   donate.setAttribute('title', t('support'));
 
-  userHighscoreNormalLabel.textContent = `${t('modeNormal')}:`;
-  userHighscoreSplitLabel.textContent = `${t('modeSplit')}:`;
-  userHighscorePressureLabel.textContent = `${t('modePressureLabel')}:`;
-  userHighscoreBlackholeLabel.textContent = `${t('modeBlackhole')}:`;
-
   authTitle.textContent = authMode === 'register' ? t('authWelcome') : t('authLoginTitle');
   authDescription.textContent = authMode === 'register' ? t('authRegisterDescription') : t('authLoginDescription');
 
-  updateCurrentUserHighscoreDisplay();
   if (!highscoreEmpty.classList.contains('hidden')) {
     highscoreEmpty.textContent = t('noHighscores');
   }
@@ -634,7 +620,32 @@ function getTopTenEntries(users, mode) {
     .filter((entry) => getScore(entry, mode) > 0);
 }
 
-function renderHighscoreList(users, mode) {
+function sortEntriesByMode(users, mode) {
+  return users
+    .slice()
+    .sort((a, b) => getScore(b, mode) - getScore(a, mode));
+}
+
+function isCurrentUserEntry(entry) {
+  if (!currentUser?.name || !entry?.name) return false;
+  return entry.name.toLowerCase() === currentUser.name.toLowerCase();
+}
+
+function getLocalCurrentUserRank(users, mode) {
+  if (!currentUser?.name) return null;
+
+  const sortedEntries = sortEntriesByMode(users, mode).filter((entry) => getScore(entry, mode) > 0);
+  const userIndex = sortedEntries.findIndex((entry) => isCurrentUserEntry(entry));
+
+  if (userIndex < 0) return null;
+
+  return {
+    rank: userIndex + 1,
+    entry: sortedEntries[userIndex]
+  };
+}
+
+function renderHighscoreList(users, mode, currentUserRank = null) {
   const entries = getTopTenEntries(users, mode);
   highscoreModeNormalButton.classList.toggle('active', mode === 'normal');
   highscoreModeSplitButton.classList.toggle('active', mode === 'split');
@@ -656,6 +667,9 @@ function renderHighscoreList(users, mode) {
   entries.forEach((entry, index) => {
     const item = document.createElement('li');
     item.className = 'highscore-entry';
+    if (isCurrentUserEntry(entry)) {
+      item.classList.add('current-user');
+    }
 
     const rank = document.createElement('span');
     rank.className = `highscore-rank ${index < 3 ? `rank-${index + 1}` : ''}`;
@@ -672,6 +686,36 @@ function renderHighscoreList(users, mode) {
     item.append(rank, name, score);
     highscoreList.appendChild(item);
   });
+
+  const userOutsideTopTen = currentUserRank
+    && currentUserRank.rank > 10
+    && currentUserRank.entry
+    && !entries.some((entry) => isCurrentUserEntry(entry));
+
+  if (userOutsideTopTen) {
+    const separator = document.createElement('li');
+    separator.className = 'highscore-separator';
+    separator.textContent = '.';
+    highscoreList.appendChild(separator);
+
+    const item = document.createElement('li');
+    item.className = 'highscore-entry current-user outside-top-ten';
+
+    const rank = document.createElement('span');
+    rank.className = 'highscore-rank';
+    rank.textContent = `${currentUserRank.rank}.`;
+
+    const name = document.createElement('span');
+    name.className = 'highscore-name';
+    name.textContent = currentUserRank.entry.name;
+
+    const score = document.createElement('span');
+    score.className = 'highscore-score';
+    score.textContent = String(getScore(currentUserRank.entry, mode));
+
+    item.append(rank, name, score);
+    highscoreList.appendChild(item);
+  }
 }
 
 async function fetchTopTenRemote() {
@@ -696,6 +740,46 @@ async function fetchTopTenRemote() {
     name: entry.username,
     highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore }
   }));
+}
+
+async function fetchCurrentUserRankRemote(mode) {
+  if (!supabaseClient || !currentUser?.name) return null;
+
+  const scoreColumn = mode === 'split' ? 'split_highscore' : mode === 'pressure' ? 'pressure_highscore' : mode === 'blackhole' ? 'blackhole_highscore' : 'highscore';
+
+  const { data: userData, error: userError } = await supabaseClient
+    .from('game_scores')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore')
+    .ilike('username', currentUser.name)
+    .limit(1)
+    .maybeSingle();
+
+  if (userError || !userData) return null;
+
+  const userEntry = ensureUserRecordShape({
+    name: userData.username,
+    highscores: {
+      normal: userData.highscore,
+      split: userData.split_highscore,
+      pressure: userData.pressure_highscore,
+      blackhole: userData.blackhole_highscore
+    }
+  });
+
+  const userScore = getScore(userEntry, mode);
+  if (userScore <= 0) return null;
+
+  const { count, error: rankError } = await supabaseClient
+    .from('game_scores')
+    .select('username', { count: 'exact', head: true })
+    .gt(scoreColumn, userScore);
+
+  if (rankError || !Number.isFinite(count)) return null;
+
+  return {
+    rank: count + 1,
+    entry: userEntry
+  };
 }
 
 async function hashPassword(password) {
@@ -861,23 +945,9 @@ function storeCurrentUserName(name) {
   }
 }
 
-function updateCurrentUserHighscoreDisplay() {
-  const normalScore = currentUser ? String(getScore(currentUser, 'normal')) : '0';
-  const splitScore = currentUser ? String(getScore(currentUser, 'split')) : '0';
-  const pressureScore = currentUser ? String(getScore(currentUser, 'pressure')) : '0';
-  const blackholeScore = currentUser ? String(getScore(currentUser, 'blackhole')) : '0';
-
-  userHighscoreNormal.textContent = normalScore;
-  userHighscoreSplit.textContent = splitScore;
-  userHighscorePressure.textContent = pressureScore;
-  userHighscoreBlackhole.textContent = blackholeScore;
-}
-
-
 function setCurrentUser(user) {
   currentUser = user ? ensureUserRecordShape(user) : null;
   usernameValue.textContent = currentUser?.name || '';
-  updateCurrentUserHighscoreDisplay();
   storeCurrentUserName(currentUser?.name || '');
 }
 
@@ -890,7 +960,6 @@ async function updateCurrentUserHighscore(score) {
 
   currentUser.highscores[currentMode] = score;
   upsertUserCache(currentUser.name, currentMode, score);
-  updateCurrentUserHighscoreDisplay();
   showNewHighscoreMessage();
 
   try {
@@ -903,7 +972,6 @@ async function updateCurrentUserHighscore(score) {
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
     upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
     upsertUserCache(currentUser.name, 'blackhole', getScore(currentUser, 'blackhole'));
-    updateCurrentUserHighscoreDisplay();
   } catch (error) {
     console.warn('Highscore konnte nicht synchronisiert werden:', error.message);
   }
@@ -995,11 +1063,13 @@ async function showHighscoreOverlay() {
 
   const remoteTopTen = await fetchTopTenRemote();
   if (remoteTopTen) {
-    renderHighscoreList(remoteTopTen, selectedHighscoreMode);
+    const currentUserRank = await fetchCurrentUserRankRemote(selectedHighscoreMode);
+    renderHighscoreList(remoteTopTen, selectedHighscoreMode, currentUserRank);
     return;
   }
 
-  renderHighscoreList(userCache, selectedHighscoreMode);
+  const localCurrentUserRank = getLocalCurrentUserRank(userCache, selectedHighscoreMode);
+  renderHighscoreList(userCache, selectedHighscoreMode, localCurrentUserRank);
 }
 
 function hideHighscoreOverlay() {
