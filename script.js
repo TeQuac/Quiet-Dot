@@ -340,7 +340,9 @@ function applyTranslations() {
   newHighscoreDisplay.textContent = t('newHighscore');
   tryAgainMessage.textContent = t('tryAgain');
   backToMenu.textContent = t('backToMenu');
-  donate.textContent = t('support');
+  donate.textContent = '☕️';
+  donate.setAttribute('aria-label', t('support'));
+  donate.setAttribute('title', t('support'));
 
   userHighscoreNormalLabel.textContent = `${t('modeNormal')}:`;
   userHighscoreSplitLabel.textContent = `${t('modeSplit')}:`;
