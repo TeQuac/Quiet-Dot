@@ -353,7 +353,8 @@ const maxDotVelocity = 4.8;
 const pressureModeTimeLimitMs = 5000;
 const movementInsetRatioX = 0;
 const movementInsetRatioY = 0;
-const teleportRangeRatio = 0.55;
+const minTeleportDistanceCm = 5;
+const pixelsPerCentimeter = 37.8;
 
 const warmDotColors = [
   '#1f2937', '#8b5e3c', '#a05d4e', '#b66a50', '#c9785a', '#d08a62', '#9f7a57', '#c17f59', '#b5835a', '#7a5c4a', '#94624e'
@@ -1197,14 +1198,14 @@ function moveDot(dotElement) {
   let newX = previousPosition.left;
   let newY = previousPosition.top;
 
-  for (let attempt = 0; attempt < 25; attempt++) {
+  const minTeleportDistancePx = minTeleportDistanceCm * pixelsPerCentimeter;
+  const maxPossibleDistance = Math.hypot(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+  const requiredDistance = Math.min(minTeleportDistancePx, maxPossibleDistance * 0.85);
+
+  for (let attempt = 0; attempt < 40; attempt++) {
     const candidateX = Math.random() * (bounds.maxX - bounds.minX) + bounds.minX;
     const candidateY = Math.random() * (bounds.maxY - bounds.minY) + bounds.minY;
     const distanceToPrevious = Math.hypot(candidateX - previousPosition.left, candidateY - previousPosition.top);
-    const allowedTeleportDistance = Math.max(
-      dotSize * 1.8,
-      Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * teleportRangeRatio
-    );
     const dotRect = {
       left: candidateX,
       right: candidateX + dotSize,
@@ -1213,10 +1214,10 @@ function moveDot(dotElement) {
     };
 
     const overlapsAvoid = avoidRects.some((rect) => overlapsRect(dotRect, rect));
-    if (distanceToPrevious > allowedTeleportDistance) continue;
+    if (distanceToPrevious < requiredDistance || overlapsAvoid) continue;
     newX = candidateX;
     newY = candidateY;
-    if (!overlapsAvoid) break;
+    break;
   }
 
   const nextPosition = { left: newX, top: newY };
