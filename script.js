@@ -7,6 +7,7 @@ const missIndicator = document.getElementById('miss-indicator');
 const tryAgainMessage = document.getElementById('try-again');
 const donate = document.getElementById('donate');
 const backToMenu = document.getElementById('back-to-menu');
+const blackhole = document.getElementById('blackhole');
 
 const introOverlay = document.getElementById('intro-overlay');
 const introAcceptButton = document.getElementById('intro-accept');
@@ -38,6 +39,7 @@ const settingsLanguageLabel = document.getElementById('settings-language-label')
 const userHighscoreNormalLabel = document.getElementById('user-highscore-normal-label');
 const userHighscoreSplitLabel = document.getElementById('user-highscore-split-label');
 const userHighscorePressureLabel = document.getElementById('user-highscore-pressure-label');
+const userHighscoreBlackholeLabel = document.getElementById('user-highscore-blackhole-label');
 const feedbackButton = document.getElementById('feedback-button');
 const feedbackForm = document.getElementById('feedback-form');
 const feedbackMessage = document.getElementById('feedback-message');
@@ -51,11 +53,13 @@ const usernameValue = document.getElementById('username-value');
 const userHighscoreNormal = document.getElementById('user-highscore-normal');
 const userHighscoreSplit = document.getElementById('user-highscore-split');
 const userHighscorePressure = document.getElementById('user-highscore-pressure');
+const userHighscoreBlackhole = document.getElementById('user-highscore-blackhole');
 const highscoreButton = document.getElementById('highscore-button');
 const highscoreOverlay = document.getElementById('highscore-overlay');
 const highscoreModeNormalButton = document.getElementById('highscore-mode-normal');
 const highscoreModeSplitButton = document.getElementById('highscore-mode-split');
 const highscoreModePressureButton = document.getElementById('highscore-mode-pressure');
+const highscoreModeBlackholeButton = document.getElementById('highscore-mode-blackhole');
 const highscoreList = document.getElementById('highscore-list');
 const highscoreEmpty = document.getElementById('highscore-empty');
 const highscoreCloseButton = document.getElementById('highscore-close');
@@ -64,11 +68,14 @@ const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
 const modePressureButton = document.getElementById('mode-pressure');
+const modeBlackholeButton = document.getElementById('mode-blackhole');
 const modeBackButton = document.getElementById('mode-back');
 const splitHintOverlay = document.getElementById('split-hint-overlay');
 const splitHintCloseButton = document.getElementById('split-hint-close');
 const pressureHintOverlay = document.getElementById('pressure-hint-overlay');
 const pressureHintCloseButton = document.getElementById('pressure-hint-close');
+const blackholeHintOverlay = document.getElementById('blackhole-hint-overlay');
+const blackholeHintCloseButton = document.getElementById('blackhole-hint-close');
 
 const storageKeys = {
   users: 'silentapUsers',
@@ -80,7 +87,8 @@ const storageKeys = {
 const gameModes = {
   normal: { labelKey: 'modeNormal' },
   split: { labelKey: 'modeSplit' },
-  pressure: { labelKey: 'modePressure' }
+  pressure: { labelKey: 'modePressure' },
+  blackhole: { labelKey: 'modeBlackhole' }
 };
 
 const developerEmail = 'te.quac@web.de';
@@ -108,16 +116,17 @@ const translations = {
     noHighscores: 'Noch keine Highscores vorhanden.', noModeHighscores: 'Noch keine {mode}-Highscores vorhanden.', close: 'Schließen',
     splitHintTitle: 'Split-Modus Wertung', splitHintText: 'Ein Punkt zählt nur, wenn beide Punkte nacheinander getroffen werden – Reihenfolge egal.',
     splitCounts: '✅ zählt', splitNoCount: '❌ zählt nicht', understood: 'Verstanden',
-    modeChoose: 'Spielmodus wählen', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.',
-    back: 'Zurück', pressureHintTitle: 'Druck-Modus', pressureHintText1: 'Du spielst wie im Normal-Modus, aber jeder Punkt hat nur 5 Sekunden Lebenszeit.', pressureHintText2: 'Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst explodiert er!',
+    modeChoose: 'Spielmodus wählen', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.\nSchwarzes Loch: Der Dot teleportiert nach oben und wird von unten angesaugt. Jeder Treffer erhöht die Saugkraft um 5%.',
+    back: 'Zurück', pressureHintTitle: 'Druck-Modus', pressureHintText1: 'Du spielst wie im Normal-Modus, aber jeder Punkt hat nur 5 Sekunden Lebenszeit.', pressureHintText2: 'Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst explodiert er!', blackholeHintTitle: 'Schwarzes-Loch-Modus', blackholeHintText1: 'Der Dot startet in der Mitte und teleportiert bei jedem Treffer nach oben in eine zufällige Richtung.', blackholeHintText2: 'Unten rotiert ein Schwarzes Loch, das den Dot ansaugt. Jede Berührung erhöht die Saugkraft um 5%.',
     letsGo: "Los geht's", newHighscore: 'Highscore!', tryAgain: 'Nochmal!', backToMenu: '← Startmenü', support: '☕️ Support',
     alertFeedbackOffline: 'Feedback konnte nicht gesendet werden: keine Verbindung verfügbar.', alertFeedbackError: 'Feedback konnte nicht gesendet werden. Bitte versuche es später erneut.', alertFeedbackSent: 'Vielen Dank! Dein Feedback wurde gesendet.',
     errFeedbackMinLength: 'Bitte mindestens 3 Zeichen eingeben.', errUsernameMin: 'Username muss mindestens 3 Zeichen lang sein.', errPasswordMin: 'Passwort muss mindestens 4 Zeichen lang sein.', errPasswordMismatch: 'Passwörter stimmen nicht überein.', errUsernameTaken: 'Dieser Username ist bereits vergeben.', errUserSave: 'User konnte nicht gespeichert werden. Bitte versuche es erneut.', errUserNotFound: 'User nicht gefunden. Bitte registrieren.', errPasswordWrong: 'Passwort ist nicht korrekt.', errLoginFailed: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
-    modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Druck', modePressureLabel: 'Druck',
+    modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Druck', modePressureLabel: 'Druck', modeBlackhole: 'Schwarzes Loch',
     introTitle: 'Willkommen bei Silentap 👋', introLead: 'Kurze Demo vor dem Login:',
     introModeNormal: 'Normal: Ein Punkt erscheint irgendwo auf dem Feld. Tippe ihn so schnell wie möglich an.',
     introModeSplit: 'Split: Zwei Punkte (links/rechts). Ein Punkt zählt nur, wenn du abwechselnd beide Seiten triffst.',
     introModePressure: 'Druck: Wie Normal, aber jeder Punkt lebt nur 5 Sekunden und explodiert sonst.',
+    introModeBlackhole: 'Schwarzes Loch: Der Dot teleportiert nach oben und wird von unten immer stärker angesogen.',
     introQuestion: 'Möchtest du Silentap jetzt spielen?', introAccept: 'Ja, spielen', introDecline: 'Nein, schließen',
     introCloseHint: 'Der Tab konnte nicht automatisch geschlossen werden. Du kannst ihn jetzt manuell schließen.'
   },
@@ -128,9 +137,9 @@ const translations = {
     start: 'Start', switchUser: 'Sign in as another user', settingsTitle: 'Settings', settingsOpen: 'Open settings', settingsClose: 'Close', settingsLanguageLabel: 'Language: {language}', settingsLanguageButton: 'Change language', feedbackToDev: 'Message to developer',
     highscoreAria: 'Open top-10 highscores', highscoreTitle: 'Top 10 highscores', highscoreModesAria: 'Game modes for highscores', noHighscores: 'No highscores yet.', noModeHighscores: 'No {mode} highscores yet.', close: 'Close',
     splitHintTitle: 'Split mode scoring', splitHintText: 'A point only counts if both dots are hit consecutively – order does not matter.', splitCounts: '✅ counts', splitNoCount: '❌ does not count', understood: 'Understood',
-    modeChoose: 'Choose game mode', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
+    modeChoose: 'Choose game mode', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.\nBlack Hole: The dot teleports upward and is pulled from below. Every hit increases suction by 5%.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', blackholeHintTitle: 'Black Hole mode', blackholeHintText1: 'The dot starts in the middle and teleports upward in a random direction after each hit.', blackholeHintText2: 'A rotating black hole at the bottom pulls the dot in. Every hit increases suction by 5%.', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
     alertFeedbackOffline: 'Feedback could not be sent: no connection available.', alertFeedbackError: 'Feedback could not be sent. Please try again later.', alertFeedbackSent: 'Thank you! Your feedback has been sent.',
-    errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure',
+    errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure', modeBlackhole: 'Black Hole',
     introTitle: 'Welcome to Silentap 👋', introLead: 'Quick demo before login:',
     introModeNormal: 'Normal: One dot appears anywhere on the field. Tap it as quickly as possible.',
     introModeSplit: 'Split: Two dots (left/right). A point counts only when you alternate between both sides.',
@@ -203,7 +212,8 @@ errLoginFailed: 'Вход не выполнен. Пожалуйста, попр�
 modeNormal: 'Обычный',
 modeSplit: 'Двойной',
 modePressure: 'Давление',
-modePressureLabel: 'Давление'
+modePressureLabel: 'Давление',
+modeBlackhole: 'Чёрная дыра'
   },
   tr: {
   authWelcome: 'Silentap’e hoş geldin',
@@ -272,6 +282,7 @@ modePressureLabel: 'Давление'
   modeSplit: 'Çift',
   modePressure: 'Baskı',
   modePressureLabel: 'Baskı',
+  modeBlackhole: 'Kara Delik',
   },
   zh: {
   authWelcome: '欢迎来到 Silentap',
@@ -340,6 +351,7 @@ modePressureLabel: 'Давление'
   modeSplit: '双人',
   modePressure: '压力',
   modePressureLabel: '压力',
+  modeBlackhole: '黑洞',
   },
 };
 
@@ -348,7 +360,7 @@ if (!supportedLanguages.includes(currentLanguage)) currentLanguage = 'de';
 let translationCache = {};
 let introDemoIntervalId = null;
 let introDemoModeIndex = 0;
-const introDemoModes = ['normal', 'split', 'pressure'];
+const introDemoModes = ['normal', 'split', 'pressure', 'blackhole'];
 
 function template(text, vars = {}) {
   return text.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? ''));
@@ -412,6 +424,7 @@ function applyTranslations() {
   if (introModeItems[0]) introModeItems[0].innerHTML = `<strong>${t('modeNormal')}:</strong> ${t('introModeNormal').replace(/^Normal:\s*/, '')}`;
   if (introModeItems[1]) introModeItems[1].innerHTML = `<strong>${t('modeSplit')}:</strong> ${t('introModeSplit').replace(/^Split:\s*/, '')}`;
   if (introModeItems[2]) introModeItems[2].innerHTML = `<strong>${t('modePressureLabel')}:</strong> ${t('introModePressure').replace(/^[^:]+:\s*/, '')}`;
+  if (introModeItems[3]) introModeItems[3].innerHTML = `<strong>${t('modeBlackhole')}:</strong> ${t('introModeBlackhole').replace(/^[^:]+:\s*/, '')}`;
   document.querySelector('.intro-question').textContent = t('introQuestion');
   introAcceptButton.textContent = t('introAccept');
   introDeclineButton.textContent = t('introDecline');
@@ -452,6 +465,7 @@ function applyTranslations() {
   highscoreModeNormalButton.textContent = t('modeNormal');
   highscoreModeSplitButton.textContent = t('modeSplit');
   highscoreModePressureButton.textContent = t('modePressureLabel');
+  highscoreModeBlackholeButton.textContent = t('modeBlackhole');
   highscoreCloseButton.textContent = t('close');
 
   document.getElementById('split-hint-title').textContent = t('splitHintTitle');
@@ -465,6 +479,7 @@ function applyTranslations() {
   modeNormalButton.textContent = t('modeNormal');
   modeSplitButton.textContent = t('modeSplit');
   modePressureButton.textContent = t('modePressureLabel');
+  modeBlackholeButton.textContent = t('modeBlackhole');
   modeBackButton.textContent = t('back');
 
   document.getElementById('pressure-hint-title').textContent = t('pressureHintTitle');
@@ -472,6 +487,12 @@ function applyTranslations() {
   pressureParagraphs[0].textContent = t('pressureHintText1');
   pressureParagraphs[1].textContent = t('pressureHintText2');
   pressureHintCloseButton.textContent = t('letsGo');
+
+  document.getElementById('blackhole-hint-title').textContent = t('blackholeHintTitle');
+  const blackholeParagraphs = document.querySelectorAll('#blackhole-hint-overlay p');
+  blackholeParagraphs[0].textContent = t('blackholeHintText1');
+  blackholeParagraphs[1].textContent = t('blackholeHintText2');
+  blackholeHintCloseButton.textContent = t('letsGo');
 
   newHighscoreDisplay.textContent = t('newHighscore');
   tryAgainMessage.textContent = t('tryAgain');
@@ -485,6 +506,7 @@ function applyTranslations() {
   userHighscoreNormalLabel.textContent = `${t('modeNormal')}:`;
   userHighscoreSplitLabel.textContent = `${t('modeSplit')}:`;
   userHighscorePressureLabel.textContent = `${t('modePressureLabel')}:`;
+  userHighscoreBlackholeLabel.textContent = `${t('modeBlackhole')}:`;
 
   authTitle.textContent = authMode === 'register' ? t('authWelcome') : t('authLoginTitle');
   authDescription.textContent = authMode === 'register' ? t('authRegisterDescription') : t('authLoginDescription');
@@ -541,12 +563,17 @@ let currentDotColorIndex = 0;
 const alwaysVisibleInGame = [counter, backToMenu];
 const avoidElements = [counter, newHighscoreDisplay, tryAgainMessage, backToMenu];
 const pressureModeClasses = ['pressure-tension-low', 'pressure-tension-medium', 'pressure-tension-high'];
+const blackholeBaseSuction = 1;
+const blackholeSuctionIncreasePerTap = 0.05;
+const blackholeCaptureDistanceFactor = 0.42;
+let blackholeSuctionMultiplier = blackholeBaseSuction;
 
 function ensureUserRecordShape(user) {
   const highscores = {
     normal: Number.isFinite(user?.highscores?.normal) ? user.highscores.normal : Number.isFinite(user?.highscore) ? user.highscore : 0,
     split: Number.isFinite(user?.highscores?.split) ? user.highscores.split : 0,
-    pressure: Number.isFinite(user?.highscores?.pressure) ? user.highscores.pressure : Number.isFinite(user?.pressure_highscore) ? user.pressure_highscore : 0
+    pressure: Number.isFinite(user?.highscores?.pressure) ? user.highscores.pressure : Number.isFinite(user?.pressure_highscore) ? user.pressure_highscore : 0,
+    blackhole: Number.isFinite(user?.highscores?.blackhole) ? user.highscores.blackhole : Number.isFinite(user?.blackhole_highscore) ? user.blackhole_highscore : 0
   };
 
   return {
@@ -591,7 +618,7 @@ function upsertUserCache(name, mode, score) {
   }
 
   if (!existing.highscores) {
-    existing.highscores = { normal: 0, split: 0, pressure: 0 };
+    existing.highscores = { normal: 0, split: 0, pressure: 0, blackhole: 0 };
   }
 
   existing.highscores[mode] = Math.max(getScore(existing, mode), score);
@@ -611,9 +638,11 @@ function renderHighscoreList(users, mode) {
   highscoreModeNormalButton.classList.toggle('active', mode === 'normal');
   highscoreModeSplitButton.classList.toggle('active', mode === 'split');
   highscoreModePressureButton.classList.toggle('active', mode === 'pressure');
+  highscoreModeBlackholeButton.classList.toggle('active', mode === 'blackhole');
   highscoreModeNormalButton.setAttribute('aria-selected', String(mode === 'normal'));
   highscoreModeSplitButton.setAttribute('aria-selected', String(mode === 'split'));
   highscoreModePressureButton.setAttribute('aria-selected', String(mode === 'pressure'));
+  highscoreModeBlackholeButton.setAttribute('aria-selected', String(mode === 'blackhole'));
 
   highscoreList.innerHTML = '';
   if (entries.length === 0) {
@@ -647,11 +676,11 @@ function renderHighscoreList(users, mode) {
 async function fetchTopTenRemote() {
   if (!supabaseClient) return null;
 
-  const scoreColumn = selectedHighscoreMode === 'split' ? 'split_highscore' : selectedHighscoreMode === 'pressure' ? 'pressure_highscore' : 'highscore';
+  const scoreColumn = selectedHighscoreMode === 'split' ? 'split_highscore' : selectedHighscoreMode === 'pressure' ? 'pressure_highscore' : selectedHighscoreMode === 'blackhole' ? 'blackhole_highscore' : 'highscore';
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore, pressure_highscore')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore')
     .order(scoreColumn, { ascending: false })
     .order('updated_at', { ascending: true })
     .limit(10);
@@ -663,7 +692,7 @@ async function fetchTopTenRemote() {
 
   return (data || []).map((entry) => ensureUserRecordShape({
     name: entry.username,
-    highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore }
+    highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore }
   }));
 }
 
@@ -686,7 +715,7 @@ function shapeRemoteUser(entry) {
   return {
     record: ensureUserRecordShape({
       name: entry.username,
-      highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore }
+      highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore }
     }),
     passwordHash: entry.password_hash || null
   };
@@ -697,7 +726,7 @@ async function fetchUserRemote(name) {
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore, pressure_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
     .ilike('username', name)
     .limit(1)
     .maybeSingle();
@@ -730,7 +759,7 @@ async function createUserRemote(name, passwordHash) {
       pressure_highscore: 0,
       password_hash: passwordHash
     })
-    .select('username, highscore, split_highscore, pressure_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
     .single();
 
   if (error) {
@@ -755,7 +784,7 @@ async function setUserPasswordRemote(name, passwordHash) {
     .from('game_scores')
     .update({ password_hash: passwordHash })
     .eq('username', name)
-    .select('username, highscore, split_highscore, pressure_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
     .single();
 
   if (error) {
@@ -787,7 +816,7 @@ async function upsertUserHighscoreRemote(name, mode, score) {
 
   return ensureUserRecordShape({
     name: data.username,
-    highscores: { normal: data.highscore, split: data.split_highscore, pressure: data.pressure_highscore }
+    highscores: { normal: data.highscore, split: data.split_highscore, pressure: data.pressure_highscore, blackhole: data.blackhole_highscore }
   });
 }
 
@@ -833,10 +862,12 @@ function updateCurrentUserHighscoreDisplay() {
   const normalScore = currentUser ? String(getScore(currentUser, 'normal')) : '0';
   const splitScore = currentUser ? String(getScore(currentUser, 'split')) : '0';
   const pressureScore = currentUser ? String(getScore(currentUser, 'pressure')) : '0';
+  const blackholeScore = currentUser ? String(getScore(currentUser, 'blackhole')) : '0';
 
   userHighscoreNormal.textContent = normalScore;
   userHighscoreSplit.textContent = splitScore;
   userHighscorePressure.textContent = pressureScore;
+  userHighscoreBlackhole.textContent = blackholeScore;
 }
 
 
@@ -864,9 +895,11 @@ async function updateCurrentUserHighscore(score) {
     currentUser.highscores.normal = Math.max(getScore(currentUser, 'normal'), getScore(remoteUser, 'normal'));
     currentUser.highscores.split = Math.max(getScore(currentUser, 'split'), getScore(remoteUser, 'split'));
     currentUser.highscores.pressure = Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser, 'pressure'));
+    currentUser.highscores.blackhole = Math.max(getScore(currentUser, 'blackhole'), getScore(remoteUser, 'blackhole'));
     upsertUserCache(currentUser.name, 'normal', getScore(currentUser, 'normal'));
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
     upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
+    upsertUserCache(currentUser.name, 'blackhole', getScore(currentUser, 'blackhole'));
     updateCurrentUserHighscoreDisplay();
   } catch (error) {
     console.warn('Highscore konnte nicht synchronisiert werden:', error.message);
@@ -893,10 +926,12 @@ function showGameElements() {
 
   splitDivider.classList.toggle('hidden', currentMode !== 'split');
   splitDivider.hidden = currentMode !== 'split';
+  blackhole.classList.toggle('hidden', currentMode !== 'blackhole');
+  blackhole.hidden = currentMode !== 'blackhole';
 }
 
 function hideGameElements() {
-  [dot, dotSplit, splitDivider, ...alwaysVisibleInGame, tryAgainMessage, missIndicator, newHighscoreDisplay].forEach((element) => {
+  [dot, dotSplit, splitDivider, blackhole, ...alwaysVisibleInGame, tryAgainMessage, missIndicator, newHighscoreDisplay].forEach((element) => {
     element.classList.add('hidden');
     element.hidden = true;
   });
@@ -910,10 +945,15 @@ function isPressureMode() {
   return currentMode === 'pressure';
 }
 
+function isBlackholeMode() {
+  return currentMode === 'blackhole';
+}
+
 function updateModeButtons() {
   modeNormalButton.classList.toggle('active', currentMode === 'normal');
   modeSplitButton.classList.toggle('active', currentMode === 'split');
   modePressureButton.classList.toggle('active', currentMode === 'pressure');
+  modeBlackholeButton.classList.toggle('active', currentMode === 'blackhole');
 }
 
 function showStartMenu() {
@@ -922,6 +962,7 @@ function showStartMenu() {
   hideGameElements();
   closeSplitHint();
   closePressureHint();
+  closeBlackholeHint();
   clearPendingTimers();
   misses = 0;
   splitSequenceLastTappedSide = null;
@@ -937,6 +978,7 @@ function showModeScreen() {
   modeScreen.classList.remove('hidden');
   closeSplitHint();
   closePressureHint();
+  closeBlackholeHint();
   hideGameElements();
   updateModeButtons();
 }
@@ -1077,6 +1119,7 @@ function setGameActive(active) {
     clearPressureModeTimer();
     updateSplitTargetHighlight();
     stopAllMovement();
+    blackholeSuctionMultiplier = blackholeBaseSuction;
     if (isPressureMode()) {
       startPressureModeTimer();
     }
@@ -1111,13 +1154,15 @@ async function updateTicker() {
       highscores: {
         normal: Math.max(getScore(currentUser, 'normal'), getScore(remoteUser.record, 'normal')),
         split: Math.max(getScore(currentUser, 'split'), getScore(remoteUser.record, 'split')),
-        pressure: Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser.record, 'pressure'))
+        pressure: Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser.record, 'pressure')),
+        blackhole: Math.max(getScore(currentUser, 'blackhole'), getScore(remoteUser.record, 'blackhole'))
       }
     });
 
     upsertUserCache(currentUser.name, 'normal', getScore(currentUser, 'normal'));
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
     upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
+    upsertUserCache(currentUser.name, 'blackhole', getScore(currentUser, 'blackhole'));
     updateCurrentUserHighscoreDisplay();
   }
 }
@@ -1296,11 +1341,12 @@ function getBoundsForDot(dotElement) {
   };
 
   if (currentMode !== 'split') {
+    const blackholeExclusion = isBlackholeMode() ? 120 : 0;
     return applyMovementInsets({
       minX: padding,
       minY: padding,
       maxX: Math.max(padding, viewportWidth - dotSize - padding),
-      maxY: Math.max(padding, viewportHeight - dotSize - padding)
+      maxY: Math.max(padding, viewportHeight - dotSize - padding - blackholeExclusion)
     });
   }
 
@@ -1423,7 +1469,106 @@ function startMovement(dotElement, previousPosition, nextPosition) {
   movementAnimations.set(dotElement, requestAnimationFrame(animate));
 }
 
+
+function getBlackholeCenter() {
+  const rect = blackhole.getBoundingClientRect();
+  if (rect.width && rect.height) {
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, radius: rect.width / 2 };
+  }
+
+  const { width, height } = getViewportSize();
+  return { x: width / 2, y: height - 60, radius: 50 };
+}
+
+function moveDotBlackhole(dotElement) {
+  const dotSize = dotElement.offsetWidth;
+  const bounds = getBoundsForDot(dotElement);
+  const previousPosition = getDotPosition(dotElement);
+  const minTeleportDistancePx = minTeleportDistanceCm * pixelsPerCentimeter;
+
+  let newX = previousPosition.left;
+  let newY = previousPosition.top;
+
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const candidateX = Math.random() * (bounds.maxX - bounds.minX) + bounds.minX;
+    const topMax = Math.max(bounds.minY + 10, bounds.minY + ((bounds.maxY - bounds.minY) * 0.36));
+    const candidateY = Math.random() * (topMax - bounds.minY) + bounds.minY;
+    const distanceToPrevious = Math.hypot(candidateX - previousPosition.left, candidateY - previousPosition.top);
+    if (distanceToPrevious < Math.min(minTeleportDistancePx, 220)) continue;
+    newX = candidateX;
+    newY = candidateY;
+    break;
+  }
+
+  const nextPosition = { left: newX, top: newY };
+  dotElement.style.left = `${nextPosition.left}px`;
+  dotElement.style.top = `${nextPosition.top}px`;
+
+  const hole = getBlackholeCenter();
+  const initialCenterX = nextPosition.left + (dotSize / 2);
+  const initialCenterY = nextPosition.top + (dotSize / 2);
+  let velocityX = (hole.x - initialCenterX) * 0.0035;
+  let velocityY = (hole.y - initialCenterY) * 0.0035;
+
+  movementStates.set(dotElement, {
+    position: { ...nextPosition },
+    velocityX,
+    velocityY
+  });
+
+  const animate = () => {
+    const movementState = movementStates.get(dotElement);
+    if (!movementState || !gameActive || !isBlackholeMode()) return;
+
+    const holeCenter = getBlackholeCenter();
+    const currentCenterX = movementState.position.left + (dotSize / 2);
+    const currentCenterY = movementState.position.top + (dotSize / 2);
+    const directionX = holeCenter.x - currentCenterX;
+    const directionY = holeCenter.y - currentCenterY;
+    const distance = Math.hypot(directionX, directionY) || 1;
+
+    const normalizedX = directionX / distance;
+    const normalizedY = directionY / distance;
+    const suction = blackholeSuctionMultiplier;
+    const acceleration = Math.min(0.34, 0.022 * suction + 0.008);
+
+    movementState.velocityX += normalizedX * acceleration;
+    movementState.velocityY += normalizedY * acceleration;
+
+    const maxVelocity = Math.min(18, 4.6 + suction * 1.5);
+    const speed = Math.hypot(movementState.velocityX, movementState.velocityY) || 1;
+    if (speed > maxVelocity) {
+      movementState.velocityX = (movementState.velocityX / speed) * maxVelocity;
+      movementState.velocityY = (movementState.velocityY / speed) * maxVelocity;
+    }
+
+    movementState.position.left += movementState.velocityX;
+    movementState.position.top += movementState.velocityY;
+
+    dotElement.style.left = `${movementState.position.left}px`;
+    dotElement.style.top = `${movementState.position.top}px`;
+
+    const captureDistance = holeCenter.radius * blackholeCaptureDistanceFactor;
+    if (distance <= captureDistance) {
+      resetRoundToCenterWithTryAgain();
+      return;
+    }
+
+    movementAnimations.set(dotElement, requestAnimationFrame(animate));
+  };
+
+  const previousAnimation = movementAnimations.get(dotElement);
+  if (previousAnimation) cancelAnimationFrame(previousAnimation);
+
+  movementAnimations.set(dotElement, requestAnimationFrame(animate));
+}
+
 function moveDot(dotElement) {
+  if (isBlackholeMode()) {
+    moveDotBlackhole(dotElement);
+    return;
+  }
+
   const avoidRects = getBlockingRects();
   const dotSize = dotElement.offsetWidth;
   const bounds = getBoundsForDot(dotElement);
@@ -1542,6 +1687,7 @@ function resetRoundToCenterWithTryAgain() {
   hasRoundStarted = false;
   hideNewHighscoreMessage();
   updateSplitTargetHighlight();
+  blackholeSuctionMultiplier = blackholeBaseSuction;
 
   if (isPressureMode() && gameActive) {
     startPressureModeTimer();
@@ -1607,6 +1753,10 @@ function hitDot() {
   counter.textContent = String(taps);
   updateDotColorByTaps();
   updateCurrentUserHighscore(taps);
+  if (isBlackholeMode()) {
+    blackholeSuctionMultiplier *= (1 + blackholeSuctionIncreasePerTap);
+  }
+
   getDotsForMode().forEach((dotElement) => moveDot(dotElement));
 
   if (isPressureMode()) {
@@ -1756,7 +1906,7 @@ function isElementVisible(element) {
 }
 
 function isGameplayOverlayOpen() {
-  return [splitHintOverlay, pressureHintOverlay, highscoreOverlay, settingsOverlay, feedbackOverlay, usernameOverlay]
+  return [splitHintOverlay, pressureHintOverlay, blackholeHintOverlay, highscoreOverlay, settingsOverlay, feedbackOverlay, usernameOverlay]
     .some((overlayElement) => isElementVisible(overlayElement));
 }
 
@@ -1766,7 +1916,7 @@ function handleTap(event) {
 
   const target = event.target;
   const touchedDotElement = target?.closest?.('#dot, #dot-split');
-  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #mode-pressure, #feedback-btn, #feedback-cancel, #feedback-submit');
+  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #mode-pressure, #mode-blackhole, #feedback-btn, #feedback-cancel, #feedback-submit');
   if (isControlButton) return;
 
   const interactionPoints = getInteractionPoints(event);
@@ -1836,11 +1986,22 @@ function showPressureHint() {
   pressureHintOverlay.classList.remove('hidden');
 }
 
+function closeBlackholeHint() {
+  blackholeHintOverlay.classList.add('hidden');
+}
+
+function showBlackholeHint() {
+  blackholeHintOverlay.classList.remove('hidden');
+}
+
 function applyMode(mode) {
   currentMode = mode;
   splitSequenceLastTappedSide = null;
   updateSplitTargetHighlight();
   updateModeButtons();
+  closeSplitHint();
+  closePressureHint();
+  closeBlackholeHint();
   updateCurrentUserHighscoreDisplay();
   void updateTicker();
 }
@@ -1928,6 +2089,12 @@ modePressureButton.addEventListener('click', () => {
   showPressureHint();
 });
 
+modeBlackholeButton.addEventListener('click', () => {
+  applyMode('blackhole');
+  setGameActive(true);
+  showBlackholeHint();
+});
+
 modeBackButton.addEventListener('click', () => {
   showStartMenu();
 });
@@ -1954,6 +2121,12 @@ highscoreModeSplitButton.addEventListener('click', async (event) => {
 highscoreModePressureButton.addEventListener('click', async (event) => {
   event.preventDefault();
   setHighscoreMode('pressure');
+  await showHighscoreOverlay();
+});
+
+highscoreModeBlackholeButton.addEventListener('click', async (event) => {
+  event.preventDefault();
+  setHighscoreMode('blackhole');
   await showHighscoreOverlay();
 });
 
@@ -1991,6 +2164,17 @@ pressureHintOverlay.addEventListener('click', (event) => {
   }
 });
 
+
+blackholeHintCloseButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  closeBlackholeHint();
+});
+
+blackholeHintOverlay.addEventListener('click', (event) => {
+  if (event.target === blackholeHintOverlay) {
+    closeBlackholeHint();
+  }
+});
 
 introAcceptButton.addEventListener('click', (event) => {
   event.preventDefault();
@@ -2130,6 +2314,7 @@ usernameForm.addEventListener('submit', async (event) => {
       upsertUserCache(authUser.record.name, 'normal', getScore(authUser.record, 'normal'));
       upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
       upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
+      upsertUserCache(authUser.record.name, 'blackhole', getScore(authUser.record, 'blackhole'));
       setCurrentUser(authUser.record);
       await updateTicker();
       showStartMenu();
@@ -2158,6 +2343,7 @@ usernameForm.addEventListener('submit', async (event) => {
     upsertUserCache(authUser.record.name, 'normal', getScore(authUser.record, 'normal'));
     upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
     upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
+    upsertUserCache(authUser.record.name, 'blackhole', getScore(authUser.record, 'blackhole'));
     setCurrentUser(authUser.record);
     await updateTicker();
     showStartMenu();

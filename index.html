@@ -24,12 +24,14 @@
           <span class="intro-preview-dot intro-dot-split"></span>
           <span class="intro-preview-pulse"></span>
           <span class="intro-preview-timer"></span>
+          <span class="intro-preview-blackhole"></span>
         </div>
       </div>
       <ul class="intro-mode-list">
         <li><strong>Normal:</strong> Ein Punkt erscheint irgendwo auf dem Feld. Tippe ihn so schnell wie möglich an.</li>
         <li><strong>Split:</strong> Zwei Punkte (links/rechts). Ein Punkt zählt nur, wenn du abwechselnd beide Seiten triffst.</li>
         <li><strong>Druck:</strong> Wie Normal, aber jeder Punkt lebt nur 5 Sekunden und explodiert sonst.</li>
+        <li><strong>Schwarzes Loch:</strong> Der Punkt teleportiert nach oben und wird von unten immer stärker angesogen.</li>
       </ul>
       <p class="intro-question">Möchtest du Silentap jetzt spielen?</p>
       <div class="intro-actions">
@@ -83,7 +85,7 @@
     <button id="settings-button" type="button" aria-label="Einstellungen öffnen">⚙️</button>
     <header id="start-header">
       <div id="username-label"><span id="username-value"></span></div>
-      <div id="user-highscore"><span id="user-highscore-normal-label">Normal:</span> <span id="user-highscore-normal">0</span> | <span id="user-highscore-split-label">Split:</span> <span id="user-highscore-split">0</span> | <span id="user-highscore-pressure-label">Druck:</span> <span id="user-highscore-pressure">0</span></div>
+      <div id="user-highscore"><span id="user-highscore-normal-label">Normal:</span> <span id="user-highscore-normal">0</span> | <span id="user-highscore-split-label">Split:</span> <span id="user-highscore-split">0</span> | <span id="user-highscore-pressure-label">Druck:</span> <span id="user-highscore-pressure">0</span> | <span id="user-highscore-blackhole-label">Schwarzes Loch:</span> <span id="user-highscore-blackhole">0</span></div>
     </header>
 
     <button id="start-button" type="button">Start</button>
@@ -109,6 +111,7 @@
         <button id="highscore-mode-normal" type="button" role="tab" aria-selected="true">Normal</button>
         <button id="highscore-mode-split" type="button" role="tab" aria-selected="false">Split</button>
         <button id="highscore-mode-pressure" type="button" role="tab" aria-selected="false">Druck</button>
+        <button id="highscore-mode-blackhole" type="button" role="tab" aria-selected="false">Schwarzes Loch</button>
       </div>
       <ol id="highscore-list"></ol>
       <p id="highscore-empty" class="hidden">Noch keine Highscores vorhanden.</p>
@@ -152,10 +155,11 @@
   <div id="mode-screen" class="hidden" aria-live="polite">
     <div class="card mode-card">
       <h2>Spielmodus wählen</h2>
-      <p>Normal: Ein Punkt über das ganze Feld.<br>Split: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.<br>Druck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.</p>
+      <p>Normal: Ein Punkt über das ganze Feld.<br>Split: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.<br>Druck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.<br>Schwarzes Loch: Der Punkt teleportiert nach oben und wird von unten immer stärker angesogen.</p>
       <button id="mode-normal" type="button">Normal</button>
       <button id="mode-split" type="button">Split</button>
       <button id="mode-pressure" type="button">Druck</button>
+      <button id="mode-blackhole" type="button">Schwarzes Loch</button>
       <button id="mode-back" type="button" class="secondary">Zurück</button>
     </div>
   </div>
@@ -169,9 +173,20 @@
     </div>
   </div>
 
+
+  <div id="blackhole-hint-overlay" class="overlay hidden" aria-live="polite">
+    <div class="card pressure-hint-card" role="dialog" aria-modal="true" aria-labelledby="blackhole-hint-title">
+      <h2 id="blackhole-hint-title">Schwarzes-Loch-Modus</h2>
+      <p>Der Dot startet in der Mitte und teleportiert bei jedem Treffer nach oben in eine zufällige Richtung.</p>
+      <p>Unten rotiert ein Schwarzes Loch, das den Dot ansaugt. Jede Berührung erhöht die Saugkraft um 5%.</p>
+      <button id="blackhole-hint-close" type="button">Bereit</button>
+    </div>
+  </div>
+
   <div id="split-divider" class="hidden" hidden></div>
   <div id="dot" class="hidden" hidden></div>
   <div id="dot-split" class="hidden" hidden></div>
+  <div id="blackhole" class="hidden" hidden aria-hidden="true"></div>
   <div id="counter" class="hidden" hidden>0</div>
   <div id="new-highscore" class="hidden" hidden>Highscore!</div>
   <div id="miss-indicator" class="hidden" hidden aria-hidden="true">❌</div>
