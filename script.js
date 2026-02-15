@@ -64,6 +64,14 @@ const highscoreList = document.getElementById('highscore-list');
 const highscoreEmpty = document.getElementById('highscore-empty');
 const highscoreCloseButton = document.getElementById('highscore-close');
 
+const highscoreModeButtons = [
+  [highscoreModeNormalButton, 'normal'],
+  [highscoreModeSplitButton, 'split'],
+  [highscoreModePressureButton, 'pressure'],
+  [highscoreModeBlackholeButton, 'blackhole']
+];
+highscoreModeButtons.forEach(([button, mode]) => button.dataset.mode = mode);
+
 const modeScreen = document.getElementById('mode-screen');
 const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
@@ -116,7 +124,7 @@ const translations = {
     noHighscores: 'Noch keine Highscores vorhanden.', noModeHighscores: 'Noch keine {mode}-Highscores vorhanden.', close: 'Schließen',
     splitHintTitle: 'Split-Modus Wertung', splitHintText: 'Ein Punkt zählt nur, wenn beide Punkte nacheinander getroffen werden – Reihenfolge egal.',
     splitCounts: '✅ zählt', splitNoCount: '❌ zählt nicht', understood: 'Verstanden',
-    modeChoose: 'Spielmodus wählen', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.\nSchwarzes Loch: Der Dot teleportiert nach oben und wird von unten angesaugt. Jeder Treffer erhöht die Saugkraft um 5%.',
+    modeChoose: 'Spielmodus wählen', modeVisualHint: 'Auswahl wird durch Animationen erklärt.', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.\nSchwarzes Loch: Der Dot teleportiert nach oben und wird von unten angesaugt. Jeder Treffer erhöht die Saugkraft um 5%.',
     back: 'Zurück', pressureHintTitle: 'Druck-Modus', pressureHintText1: 'Du spielst wie im Normal-Modus, aber jeder Punkt hat nur 5 Sekunden Lebenszeit.', pressureHintText2: 'Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst explodiert er!', blackholeHintTitle: 'Schwarzes-Loch-Modus', blackholeHintText1: 'Der Dot startet in der Mitte und teleportiert bei jedem Treffer nach oben in eine zufällige Richtung.', blackholeHintText2: 'Unten rotiert ein Schwarzes Loch, das den Dot ansaugt. Jede Berührung erhöht die Saugkraft um 5%.',
     letsGo: "Los geht's", newHighscore: 'Highscore!', tryAgain: 'Nochmal!', backToMenu: '← Startmenü', support: '☕️ Support',
     alertFeedbackOffline: 'Feedback konnte nicht gesendet werden: keine Verbindung verfügbar.', alertFeedbackError: 'Feedback konnte nicht gesendet werden. Bitte versuche es später erneut.', alertFeedbackSent: 'Vielen Dank! Dein Feedback wurde gesendet.',
@@ -137,7 +145,7 @@ const translations = {
     start: 'Start', switchUser: 'Sign in as another user', settingsTitle: 'Settings', settingsOpen: 'Open settings', settingsClose: 'Close', settingsLanguageLabel: 'Language: {language}', settingsLanguageButton: 'Change language', feedbackToDev: 'Message to developer',
     highscoreAria: 'Open top-10 highscores', highscoreTitle: 'Top 10 highscores', highscoreModesAria: 'Game modes for highscores', noHighscores: 'No highscores yet.', noModeHighscores: 'No {mode} highscores yet.', close: 'Close',
     splitHintTitle: 'Split mode scoring', splitHintText: 'A point only counts if both dots are hit consecutively – order does not matter.', splitCounts: '✅ counts', splitNoCount: '❌ does not count', understood: 'Understood',
-    modeChoose: 'Choose game mode', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.\nBlack Hole: The dot teleports upward and is pulled from below. Every hit increases suction by 5%.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', blackholeHintTitle: 'Black Hole mode', blackholeHintText1: 'The dot starts in the middle and teleports upward in a random direction after each hit.', blackholeHintText2: 'A rotating black hole at the bottom pulls the dot in. Every hit increases suction by 5%.', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
+    modeChoose: 'Choose game mode', modeVisualHint: 'Animations explain each mode.', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.\nBlack Hole: The dot teleports upward and is pulled from below. Every hit increases suction by 5%.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', blackholeHintTitle: 'Black Hole mode', blackholeHintText1: 'The dot starts in the middle and teleports upward in a random direction after each hit.', blackholeHintText2: 'A rotating black hole at the bottom pulls the dot in. Every hit increases suction by 5%.', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
     alertFeedbackOffline: 'Feedback could not be sent: no connection available.', alertFeedbackError: 'Feedback could not be sent. Please try again later.', alertFeedbackSent: 'Thank you! Your feedback has been sent.',
     errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure', modeBlackhole: 'Black Hole',
     introTitle: 'Welcome to Silentap 👋', introLead: 'Quick demo before login:',
@@ -420,11 +428,6 @@ function applyTranslations() {
 
   document.getElementById('intro-title').textContent = t('introTitle');
   document.getElementById('intro-lead').textContent = t('introLead');
-  const introModeItems = document.querySelectorAll('.intro-mode-list li');
-  if (introModeItems[0]) introModeItems[0].innerHTML = `<strong>${t('modeNormal')}:</strong> ${t('introModeNormal').replace(/^Normal:\s*/, '')}`;
-  if (introModeItems[1]) introModeItems[1].innerHTML = `<strong>${t('modeSplit')}:</strong> ${t('introModeSplit').replace(/^Split:\s*/, '')}`;
-  if (introModeItems[2]) introModeItems[2].innerHTML = `<strong>${t('modePressureLabel')}:</strong> ${t('introModePressure').replace(/^[^:]+:\s*/, '')}`;
-  if (introModeItems[3]) introModeItems[3].innerHTML = `<strong>${t('modeBlackhole')}:</strong> ${t('introModeBlackhole').replace(/^[^:]+:\s*/, '')}`;
   document.querySelector('.intro-question').textContent = t('introQuestion');
   introAcceptButton.textContent = t('introAccept');
   introDeclineButton.textContent = t('introDecline');
@@ -462,20 +465,23 @@ function applyTranslations() {
 
   document.getElementById('highscore-title').textContent = t('highscoreTitle');
   document.querySelector('.highscore-mode-selector').setAttribute('aria-label', t('highscoreModesAria'));
-  highscoreModeNormalButton.textContent = t('modeNormal');
-  highscoreModeSplitButton.textContent = t('modeSplit');
-  highscoreModePressureButton.textContent = t('modePressureLabel');
-  highscoreModeBlackholeButton.textContent = t('modeBlackhole');
+  highscoreModeNormalButton.textContent = '';
+  highscoreModeSplitButton.textContent = '';
+  highscoreModePressureButton.textContent = '';
+  highscoreModeBlackholeButton.textContent = '';
+  highscoreModeNormalButton.setAttribute('aria-label', t('modeNormal'));
+  highscoreModeSplitButton.setAttribute('aria-label', t('modeSplit'));
+  highscoreModePressureButton.setAttribute('aria-label', t('modePressureLabel'));
+  highscoreModeBlackholeButton.setAttribute('aria-label', t('modeBlackhole'));
   highscoreCloseButton.textContent = t('close');
 
   document.getElementById('split-hint-title').textContent = t('splitHintTitle');
-  document.querySelector('#split-hint-overlay p').textContent = t('splitHintText');
   document.querySelector('.hint-row.success .hint-label').textContent = t('splitCounts');
   document.querySelector('.hint-row.fail .hint-label').textContent = t('splitNoCount');
   splitHintCloseButton.textContent = t('understood');
 
   document.querySelector('#mode-screen h2').textContent = t('modeChoose');
-  document.querySelector('#mode-screen p').innerHTML = t('modeDescription').replace(/\n/g, '<br>');
+  document.getElementById('mode-visual-hint').textContent = t('modeVisualHint');
   modeNormalButton.textContent = t('modeNormal');
   modeSplitButton.textContent = t('modeSplit');
   modePressureButton.textContent = t('modePressureLabel');
@@ -483,15 +489,9 @@ function applyTranslations() {
   modeBackButton.textContent = t('back');
 
   document.getElementById('pressure-hint-title').textContent = t('pressureHintTitle');
-  const pressureParagraphs = document.querySelectorAll('#pressure-hint-overlay p');
-  pressureParagraphs[0].textContent = t('pressureHintText1');
-  pressureParagraphs[1].textContent = t('pressureHintText2');
   pressureHintCloseButton.textContent = t('letsGo');
 
   document.getElementById('blackhole-hint-title').textContent = t('blackholeHintTitle');
-  const blackholeParagraphs = document.querySelectorAll('#blackhole-hint-overlay p');
-  blackholeParagraphs[0].textContent = t('blackholeHintText1');
-  blackholeParagraphs[1].textContent = t('blackholeHintText2');
   blackholeHintCloseButton.textContent = t('letsGo');
 
   newHighscoreDisplay.textContent = t('newHighscore');

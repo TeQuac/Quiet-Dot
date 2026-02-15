@@ -591,6 +591,60 @@ a {
   cursor: pointer;
 }
 
+#highscore-mode-normal,
+#highscore-mode-split,
+#highscore-mode-pressure,
+#highscore-mode-blackhole {
+  background: #fff;
+  border: 1px solid #ced9e6;
+  min-height: 48px;
+  position: relative;
+  color: transparent;
+}
+
+#highscore-mode-normal::before,
+#highscore-mode-split::before,
+#highscore-mode-pressure::before,
+#highscore-mode-blackhole::before {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+}
+
+#highscore-mode-normal::before {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #121212;
+}
+
+#highscore-mode-split::before {
+  width: 34px;
+  height: 16px;
+  background:
+    radial-gradient(circle, #121212 0 4px, transparent 5px) left center / 14px 14px no-repeat,
+    radial-gradient(circle, #121212 0 4px, transparent 5px) right center / 14px 14px no-repeat,
+    linear-gradient(#121212, #121212) center / 4px 100% no-repeat;
+}
+
+#highscore-mode-pressure::before {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #121212 0 5px, transparent 6px),
+    conic-gradient(from 0deg, rgba(0, 0, 0, 0) 0deg 18deg, #121212 18deg 30deg, rgba(0, 0, 0, 0) 30deg 48deg, #121212 48deg 60deg, rgba(0, 0, 0, 0) 60deg 78deg, #121212 78deg 90deg, rgba(0, 0, 0, 0) 90deg 108deg, #121212 108deg 120deg, rgba(0, 0, 0, 0) 120deg 138deg, #121212 138deg 150deg, rgba(0, 0, 0, 0) 150deg 168deg, #121212 168deg 180deg, rgba(0, 0, 0, 0) 180deg 198deg, #121212 198deg 210deg, rgba(0, 0, 0, 0) 210deg 228deg, #121212 228deg 240deg, rgba(0, 0, 0, 0) 240deg 258deg, #121212 258deg 270deg, rgba(0, 0, 0, 0) 270deg 288deg, #121212 288deg 300deg, rgba(0, 0, 0, 0) 300deg 318deg, #121212 318deg 330deg, rgba(0, 0, 0, 0) 330deg 360deg);
+}
+
+#highscore-mode-blackhole::before {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #05070e 0 34%, #1c2352 52%, #5b38a4 68%, rgba(91, 56, 164, 0) 100%);
+}
+
 #highscore-close.secondary {
   background: #e9e9e9;
   color: #333;
