@@ -681,7 +681,8 @@ async function fetchTopTenRemote() {
   const { data, error } = await supabaseClient
     .from('game_scores')
     .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore')
-    .order(scoreColumn, { ascending: false })
+    .gt(scoreColumn, 0)
+    .order(scoreColumn, { ascending: false, nullsFirst: false })
     .order('updated_at', { ascending: true })
     .limit(10);
 
@@ -744,7 +745,7 @@ async function createUserRemote(name, passwordHash) {
     return {
       record: ensureUserRecordShape({
         name,
-        highscores: { normal: 0, split: 0, pressure: 0 }
+        highscores: { normal: 0, split: 0, pressure: 0, blackhole: 0 }
       }),
       passwordHash
     };
@@ -757,6 +758,7 @@ async function createUserRemote(name, passwordHash) {
       highscore: 0,
       split_highscore: 0,
       pressure_highscore: 0,
+      blackhole_highscore: 0,
       password_hash: passwordHash
     })
     .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
@@ -774,7 +776,7 @@ async function setUserPasswordRemote(name, passwordHash) {
     return {
       record: ensureUserRecordShape({
         name,
-        highscores: { normal: 0, split: 0, pressure: 0 }
+        highscores: { normal: 0, split: 0, pressure: 0, blackhole: 0 }
       }),
       passwordHash
     };
