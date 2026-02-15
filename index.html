@@ -27,12 +27,6 @@
           <span class="intro-preview-blackhole"></span>
         </div>
       </div>
-      <ul class="intro-mode-list">
-        <li><strong>Normal:</strong> Ein Punkt erscheint irgendwo auf dem Feld. Tippe ihn so schnell wie möglich an.</li>
-        <li><strong>Split:</strong> Zwei Punkte (links/rechts). Ein Punkt zählt nur, wenn du abwechselnd beide Seiten triffst.</li>
-        <li><strong>Druck:</strong> Wie Normal, aber jeder Punkt lebt nur 5 Sekunden und explodiert sonst.</li>
-        <li><strong>Schwarzes Loch:</strong> Der Punkt teleportiert nach oben und wird von unten immer stärker angesogen.</li>
-      </ul>
       <p class="intro-question">Möchtest du Silentap jetzt spielen?</p>
       <div class="intro-actions">
         <button id="intro-accept" type="button">Ja, spielen</button>
@@ -108,10 +102,10 @@
     <div class="card highscore-card" role="dialog" aria-modal="true" aria-labelledby="highscore-title">
       <h2 id="highscore-title">Top 10 Highscores</h2>
       <div class="highscore-mode-selector" role="tablist" aria-label="Spielmodi für Highscores">
-        <button id="highscore-mode-normal" type="button" role="tab" aria-selected="true">Normal</button>
-        <button id="highscore-mode-split" type="button" role="tab" aria-selected="false">Split</button>
-        <button id="highscore-mode-pressure" type="button" role="tab" aria-selected="false">Druck</button>
-        <button id="highscore-mode-blackhole" type="button" role="tab" aria-selected="false">Schwarzes Loch</button>
+        <button id="highscore-mode-normal" type="button" role="tab" aria-selected="true" aria-label="Normalmodus"></button>
+        <button id="highscore-mode-split" type="button" role="tab" aria-selected="false" aria-label="Splitmodus"></button>
+        <button id="highscore-mode-pressure" type="button" role="tab" aria-selected="false" aria-label="Druckmodus"></button>
+        <button id="highscore-mode-blackhole" type="button" role="tab" aria-selected="false" aria-label="Schwarzes-Loch-Modus"></button>
       </div>
       <ol id="highscore-list"></ol>
       <p id="highscore-empty" class="hidden">Noch keine Highscores vorhanden.</p>
@@ -124,7 +118,6 @@
   <div id="split-hint-overlay" class="overlay hidden" aria-live="polite">
     <div class="card split-hint-card" role="dialog" aria-modal="true" aria-labelledby="split-hint-title">
       <h2 id="split-hint-title">Split-Modus Wertung</h2>
-      <p>Ein Punkt zählt nur, wenn beide Punkte <strong>nacheinander</strong> getroffen werden – Reihenfolge egal.</p>
       <div class="split-hint-visual" aria-hidden="true">
         <div class="hint-row success">
           <span class="hint-label">✅ zählt</span>
@@ -155,7 +148,7 @@
   <div id="mode-screen" class="hidden" aria-live="polite">
     <div class="card mode-card">
       <h2>Spielmodus wählen</h2>
-      <p>Normal: Ein Punkt über das ganze Feld.<br>Split: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.<br>Druck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.<br>Schwarzes Loch: Der Punkt teleportiert nach oben und wird von unten immer stärker angesogen.</p>
+      <p id="mode-visual-hint">Auswahl wird durch Animationen erklärt.</p>
       <button id="mode-normal" type="button">Normal</button>
       <button id="mode-split" type="button">Split</button>
       <button id="mode-pressure" type="button">Druck</button>
@@ -167,8 +160,6 @@
   <div id="pressure-hint-overlay" class="overlay hidden" aria-live="polite">
     <div class="card pressure-hint-card" role="dialog" aria-modal="true" aria-labelledby="pressure-hint-title">
       <h2 id="pressure-hint-title">Druck-Modus</h2>
-      <p>Du spielst wie im Normal-Modus, aber jeder Punkt hat nur <strong>5 Sekunden</strong> Lebenszeit.</p>
-      <p>Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst <strong>explodiert</strong> er!</p>
       <button id="pressure-hint-close" type="button">Los geht's</button>
     </div>
   </div>
@@ -177,8 +168,6 @@
   <div id="blackhole-hint-overlay" class="overlay hidden" aria-live="polite">
     <div class="card pressure-hint-card" role="dialog" aria-modal="true" aria-labelledby="blackhole-hint-title">
       <h2 id="blackhole-hint-title">Schwarzes-Loch-Modus</h2>
-      <p>Der Dot startet in der Mitte und teleportiert bei jedem Treffer nach oben in eine zufällige Richtung.</p>
-      <p>Unten rotiert ein Schwarzes Loch, das den Dot ansaugt. Jede Berührung erhöht die Saugkraft um 5%.</p>
       <button id="blackhole-hint-close" type="button">Bereit</button>
     </div>
   </div>
