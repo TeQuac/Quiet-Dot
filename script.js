@@ -1819,26 +1819,13 @@ function moveDot(dotElement) {
 }
 
 function getBlackholeResetAnchor(dotElement) {
-  const dotSize = dotElement.offsetWidth;
-  const { width: viewportWidth, height: viewportHeight } = getViewportSize();
-
-  return {
-    left: `${(viewportWidth - dotSize) / 2}px`,
-    top: `${Math.max(0, viewportHeight - dotSize - 20)}px`
-  };
+  return getCenteredPosition(dotElement);
 }
 
 function getCenteredPosition(dotElement, dotIndex = 0) {
   const dotSize = dotElement.offsetWidth;
   const { width: viewportWidth, height: viewportHeight } = getViewportSize();
 
-   if (currentMode === 'blackhole') {
-    return {
-      left: `${(viewportWidth - dotSize) / 2}px`,
-      top: `${Math.max(0, viewportHeight - dotSize - 20)}px`
-    };
-  }
-  
   if (currentMode !== 'split') {
     return {
       left: `${(viewportWidth - dotSize) / 2}px`,
