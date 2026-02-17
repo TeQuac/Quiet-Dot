@@ -1753,8 +1753,12 @@ function moveDotBlackhole(dotElement) {
     const resetCenterY = resetTop + (dotSize / 2);
     const distanceToResetPosition = Math.hypot(resetCenterX - updatedCenterX, resetCenterY - updatedCenterY);
     const resetSnapDistance = Math.max(12, holeCenter.radius * 0.28);
+    const centerSnapDistance = Math.max(10, holeCenter.radius * 0.18);
 
-    if (blackholeCaptureInProgress && distanceToResetPosition <= resetSnapDistance) {
+    if (
+      blackholeCaptureInProgress
+      && (distanceToResetPosition <= resetSnapDistance || updatedDistance <= centerSnapDistance)
+    ) {
       movementState.position.left = resetLeft;
       movementState.position.top = resetTop;
       dotElement.style.left = `${movementState.position.left}px`;
