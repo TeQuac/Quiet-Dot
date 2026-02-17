@@ -1746,10 +1746,17 @@ function moveDotBlackhole(dotElement) {
       blackholeCaptureInProgress = true;
     }
 
-    const centerSnapDistance = Math.max(14, holeCenter.radius * 1);
-    if (blackholeCaptureInProgress && updatedDistance <= centerSnapDistance) {
-      movementState.position.left = holeCenter.x - (dotSize / 2);
-      movementState.position.top = holeCenter.y - (dotSize / 2);
+    const resetPosition = getBlackholeResetAnchor(dotElement);
+    const resetLeft = Number.parseFloat(resetPosition.left) || 0;
+    const resetTop = Number.parseFloat(resetPosition.top) || 0;
+    const resetCenterX = resetLeft + (dotSize / 2);
+    const resetCenterY = resetTop + (dotSize / 2);
+    const distanceToResetPosition = Math.hypot(resetCenterX - updatedCenterX, resetCenterY - updatedCenterY);
+    const resetSnapDistance = Math.max(12, holeCenter.radius * 0.28);
+
+    if (blackholeCaptureInProgress && distanceToResetPosition <= resetSnapDistance) {
+      movementState.position.left = resetLeft;
+      movementState.position.top = resetTop;
       dotElement.style.left = `${movementState.position.left}px`;
       dotElement.style.top = `${movementState.position.top}px`;
       resetRoundToCenterWithTryAgain();
@@ -1805,6 +1812,16 @@ function moveDot(dotElement) {
   dotElement.style.left = `${nextPosition.left}px`;
   dotElement.style.top = `${nextPosition.top}px`;
   startMovement(dotElement, previousPosition, nextPosition);
+}
+
+function getBlackholeResetAnchor(dotElement) {
+  const dotSize = dotElement.offsetWidth;
+  const { width: viewportWidth, height: viewportHeight } = getViewportSize();
+
+  return {
+    left: `${(viewportWidth - dotSize) / 2}px`,
+    top: `${Math.max(0, viewportHeight - dotSize - 20)}px`
+  };
 }
 
 function getCenteredPosition(dotElement, dotIndex = 0) {
