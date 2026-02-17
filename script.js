@@ -1737,12 +1737,16 @@ function moveDotBlackhole(dotElement) {
     dotElement.style.left = `${movementState.position.left}px`;
     dotElement.style.top = `${movementState.position.top}px`;
 
+    const updatedCenterX = movementState.position.left + (dotSize / 2);
+    const updatedCenterY = movementState.position.top + (dotSize / 2);
+    const updatedDistance = Math.hypot(holeCenter.x - updatedCenterX, holeCenter.y - updatedCenterY);
+
     const captureDistance = holeCenter.radius * blackholeCaptureDistanceFactor;
-    if (!blackholeCaptureInProgress && distance <= captureDistance) {
+    if (!blackholeCaptureInProgress && updatedDistance <= captureDistance) {
       blackholeCaptureInProgress = true;
     }
 
-    if (blackholeCaptureInProgress && distance <= 6) {
+    if (blackholeCaptureInProgress && updatedDistance <= 1.5) {
       movementState.position.left = holeCenter.x - (dotSize / 2);
       movementState.position.top = holeCenter.y - (dotSize / 2);
       dotElement.style.left = `${movementState.position.left}px`;
