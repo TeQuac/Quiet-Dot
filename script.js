@@ -99,6 +99,14 @@ const gameModes = {
 
 const developerEmail = 'te.quac@web.de';
 
+const adMobConfig = {
+  appId: 'ca-app-pub-2368261241821766~8726514004',
+  startupInterstitialAdUnitId: 'ca-app-pub-2368261241821766/5878647945'
+};
+
+let startupAdPrepared = false;
+let startupAdUnavailableLogged = false;
+
 
 const supportedLanguages = ['de', 'en', 'ru', 'tr', 'zh'];
 const languageNames = {
@@ -2283,6 +2291,59 @@ function syncGameLayoutToViewport() {
   }
 }
 
+function getCapacitorAdMobPlugin() {
+  return window?.Capacitor?.Plugins?.AdMob;
+}
+
+async function prepareStartupAdIfPossible() {
+  if (startupAdPrepared) return true;
+
+  const adMobPlugin = getCapacitorAdMobPlugin();
+  if (!adMobPlugin?.prepareInterstitial) {
+    if (!startupAdUnavailableLogged) {
+      console.info('AdMob-Plugin nicht verfügbar (Web/PWA ohne nativen Container).');
+      startupAdUnavailableLogged = true;
+    }
+    return false;
+  }
+
+  try {
+    await adMobPlugin.prepareInterstitial({
+      adId: adMobConfig.startupInterstitialAdUnitId,
+      isTesting: false
+    });
+    startupAdPrepared = true;
+    return true;
+  } catch (error) {
+    console.warn('Start-Werbung konnte nicht vorbereitet werden:', error?.message || error);
+    return false;
+  }
+}
+
+async function showStartupAdIfPossible() {
+  const adMobPlugin = getCapacitorAdMobPlugin();
+  const canShow = await prepareStartupAdIfPossible();
+
+  if (!canShow || !adMobPlugin?.showInterstitial) {
+    return;
+  }
+
+  try {
+    await adMobPlugin.showInterstitial();
+    startupAdPrepared = false;
+  } catch (error) {
+    console.warn('Start-Werbung konnte nicht angezeigt werden:', error?.message || error);
+  }
+}
+
+async function handleStartAction(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (!currentUser) return;
+  await showStartupAdIfPossible();
+  showModeScreen();
+}
+
 window.addEventListener('resize', syncGameLayoutToViewport);
 window.addEventListener('orientationchange', () => {
   requestAnimationFrame(syncGameLayoutToViewport);
@@ -2292,19 +2353,9 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', syncGameLayoutToViewport);
 }
 
-startButton.addEventListener('click', (event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  if (!currentUser) return;
-  showModeScreen();
-});
+startButton.addEventListener('click', handleStartAction);
 
-startButton.addEventListener('touchstart', (event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  if (!currentUser) return;
-  showModeScreen();
-}, { passive: false });
+startButton.addEventListener('touchstart', handleStartAction, { passive: false });
 
 modeNormalButton.addEventListener('click', () => {
   showModeExplainOverlay('normal');
