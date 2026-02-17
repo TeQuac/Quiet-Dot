@@ -3,15 +3,18 @@
 ---------------------------- */
 
 :root {
-  color-scheme: light;
+  color-scheme: only light;
+  forced-color-adjust: none;
 }
 
 html,
 body {
+  color-scheme: only light;
   height: 100%;
   width: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  background-color: #ffffff;
 }
 
 body {
