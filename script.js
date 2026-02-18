@@ -573,7 +573,6 @@ const avoidElements = [counter, newHighscoreDisplay, tryAgainMessage, backToMenu
 const pressureModeClasses = ['pressure-tension-low', 'pressure-tension-medium', 'pressure-tension-high'];
 const blackholeBaseSuction = 1;
 const blackholeSuctionIncreasePerTap = 0.05;
-const blackholeCaptureDistanceFactor = 0.42;
 const blackholeResetBottomOffsetPx = 23;
 let blackholeSuctionMultiplier = blackholeBaseSuction;
 let blackholeCaptureInProgress = false;
@@ -1535,12 +1534,11 @@ function getBoundsForDot(dotElement) {
   };
 
   if (currentMode !== 'split') {
-    const blackholeExclusion = isBlackholeMode() ? 120 : 0;
     return applyMovementInsets({
       minX: padding,
       minY: padding,
       maxX: Math.max(padding, viewportWidth - dotSize - padding),
-      maxY: Math.max(padding, viewportHeight - dotSize - padding - blackholeExclusion)
+      maxY: Math.max(padding, viewportHeight - dotSize - padding)
     });
   }
 
@@ -1750,28 +1748,14 @@ function moveDotBlackhole(dotElement) {
     const updatedCenterY = movementState.position.top + (dotSize / 2);
     const updatedDistance = Math.hypot(holeCenter.x - updatedCenterX, holeCenter.y - updatedCenterY);
 
-    const captureDistance = holeCenter.radius * blackholeCaptureDistanceFactor;
-    if (!blackholeCaptureInProgress && updatedDistance <= captureDistance) {
+    if (!blackholeCaptureInProgress && updatedDistance <= holeCenter.radius) {
       blackholeCaptureInProgress = true;
     }
 
     const resetPosition = getBlackholeResetAnchor(dotElement);
-    const resetLeft = Number.parseFloat(resetPosition.left) || 0;
     const resetTop = Number.parseFloat(resetPosition.top) || 0;
-    const resetCenterX = resetLeft + (dotSize / 2);
-    const resetCenterY = resetTop + (dotSize / 2);
-    const distanceToResetPosition = Math.hypot(resetCenterX - updatedCenterX, resetCenterY - updatedCenterY);
-    const resetSnapDistance = Math.max(12, holeCenter.radius * 0.28);
-    const centerSnapDistance = Math.max(10, holeCenter.radius * 0.18);
 
-    if (
-      blackholeCaptureInProgress
-      && (distanceToResetPosition <= resetSnapDistance || updatedDistance <= centerSnapDistance)
-    ) {
-      movementState.position.left = resetLeft;
-      movementState.position.top = resetTop;
-      dotElement.style.left = `${movementState.position.left}px`;
-      dotElement.style.top = `${movementState.position.top}px`;
+    if (blackholeCaptureInProgress && movementState.position.top >= resetTop) {
       resetRoundToCenterWithTryAgain();
       return;
     }
