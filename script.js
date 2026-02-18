@@ -2162,11 +2162,6 @@ function handleTap(event) {
 
   const interactionPoints = getInteractionPoints(event);
 
-  if (isBlackholeMode() && interactionPoints.some((point) => isPointInsideBlackhole(point))) {
-    showMissIndicator(interactionPoints[0]);
-    return;
-  }
-
   if (currentMode === 'split') {
     const leftHit = touchedDotElement === dot || interactionPoints.some((point) => isTapInsideDot(dot, point));
     const rightHit = touchedDotElement === dotSplit || interactionPoints.some((point) => isTapInsideDot(dotSplit, point));
