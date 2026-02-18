@@ -574,6 +574,7 @@ const pressureModeClasses = ['pressure-tension-low', 'pressure-tension-medium', 
 const blackholeBaseSuction = 1;
 const blackholeSuctionIncreasePerTap = 0.05;
 const blackholeCaptureDistanceFactor = 0.42;
+const blackholeResetBottomOffsetPx = 23;
 let blackholeSuctionMultiplier = blackholeBaseSuction;
 let blackholeCaptureInProgress = false;
 let modeStartInProgress = false;
@@ -1827,7 +1828,14 @@ function moveDot(dotElement) {
 }
 
 function getBlackholeResetAnchor(dotElement) {
-  return getCenteredPosition(dotElement);
+  const dotSize = dotElement.offsetWidth;
+  const { width: viewportWidth, height: viewportHeight } = getViewportSize();
+  const top = Math.max(0, viewportHeight - dotSize - blackholeResetBottomOffsetPx);
+
+  return {
+    left: `${(viewportWidth - dotSize) / 2}px`,
+    top: `${top}px`
+  };
 }
 
 function getCenteredPosition(dotElement, dotIndex = 0) {
@@ -2154,6 +2162,11 @@ function handleTap(event) {
 
   const interactionPoints = getInteractionPoints(event);
 
+  if (isBlackholeMode() && interactionPoints.some((point) => isPointInsideBlackhole(point))) {
+    showMissIndicator(interactionPoints[0]);
+    return;
+  }
+
   if (currentMode === 'split') {
     const leftHit = touchedDotElement === dot || interactionPoints.some((point) => isTapInsideDot(dot, point));
     const rightHit = touchedDotElement === dotSplit || interactionPoints.some((point) => isTapInsideDot(dotSplit, point));
@@ -2189,10 +2202,6 @@ function handleTap(event) {
   }
 
   if (isBlackholeMode()) {
-    const tappedBlackhole = blackholeCaptureInProgress && interactionPoints.some((point) => isPointInsideBlackhole(point));
-    if (tappedBlackhole) {
-      showMissIndicator(interactionPoints[0]);
-    }
     return;
   }
 
