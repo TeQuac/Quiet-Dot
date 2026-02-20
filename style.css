@@ -118,6 +118,7 @@ a {
 #mode-split,
 #mode-pressure,
 #mode-blackhole,
+#mode-upward,
 #mode-back,
 #feedback-send,
 #feedback-cancel,
@@ -149,7 +150,8 @@ a {
 #mode-normal.active,
 #mode-split.active,
 #mode-pressure.active,
-#mode-blackhole.active {
+#mode-blackhole.active,
+#mode-upward.active {
   outline: 2px solid #d6ae76;
 }
 
@@ -605,6 +607,41 @@ a {
   animation: modeExplainBlackhole 2.6s ease-in-out infinite;
 }
 
+.mode-explain-upward-band {
+  position: absolute;
+  left: 20%;
+  top: 70%;
+  width: 60%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #3a5175 0%, #223550 100%);
+  opacity: 0;
+}
+
+.mode-explain-animation[data-mode="upward"] .mode-explain-dot {
+  opacity: 1;
+  left: 42%;
+  top: 62%;
+  animation: modeExplainUpwardDot 1.5s ease-in-out infinite;
+}
+
+.mode-explain-animation[data-mode="upward"] .mode-explain-upward-band {
+  opacity: 1;
+  animation: modeExplainUpwardBand 1.5s ease-in-out infinite;
+}
+
+@keyframes modeExplainUpwardBand {
+  0%,
+  100% { transform: translateY(0); }
+  45% { transform: translateY(18px); }
+}
+
+@keyframes modeExplainUpwardDot {
+  0% { transform: translate(0, 0); }
+  45% { transform: translate(0, 16px); }
+  100% { transform: translate(34px, -66px); }
+}
+
 .mode-explain-actions {
   display: flex;
   gap: 10px;
@@ -703,7 +740,7 @@ a {
 
 .highscore-mode-selector {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -711,6 +748,7 @@ a {
 #highscore-mode-split,
 #highscore-mode-pressure,
 #highscore-mode-blackhole,
+#highscore-mode-upward,
 #highscore-close {
   padding: 12px;
   border-radius: 10px;
@@ -725,7 +763,8 @@ a {
 #highscore-mode-normal,
 #highscore-mode-split,
 #highscore-mode-pressure,
-#highscore-mode-blackhole {
+#highscore-mode-blackhole,
+#highscore-mode-upward {
   background: #fff;
   border: 1px solid #ced9e6;
   min-height: 48px;
@@ -736,7 +775,8 @@ a {
 #highscore-mode-normal::before,
 #highscore-mode-split::before,
 #highscore-mode-pressure::before,
-#highscore-mode-blackhole::before {
+#highscore-mode-blackhole::before,
+#highscore-mode-upward::before {
   content: '';
   position: absolute;
   inset: 50% auto auto 50%;
@@ -774,6 +814,15 @@ a {
   border-radius: 50%;
   background:
     radial-gradient(circle at 50% 50%, #05070e 0 34%, #1c2352 52%, #5b38a4 68%, rgba(91, 56, 164, 0) 100%);
+}
+
+#highscore-mode-upward::before {
+  width: 30px;
+  height: 16px;
+  border-radius: 0;
+  background:
+    linear-gradient(#121212, #121212) center 70% / 26px 3px no-repeat,
+    conic-gradient(from 135deg, transparent 0 75%, #121212 0 85%, transparent 0) center 18% / 11px 11px no-repeat;
 }
 
 #highscore-close.secondary {
@@ -972,6 +1021,61 @@ a {
 
 #dot.pressure-explode {
   animation: pressureExplode 0.42s ease-out forwards;
+}
+
+#dot.upward-flying {
+  transition: none;
+  box-shadow: 0 0 0 6px rgba(213, 163, 102, 0.18);
+}
+
+.upward-band {
+  position: fixed;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2f3d5f 0%, #1a2338 100%);
+  box-shadow: 0 3px 8px rgba(10, 14, 25, 0.35);
+  z-index: 8;
+}
+
+#upward-current-band {
+  background: none;
+  overflow: visible;
+}
+
+#upward-current-band .upward-band-path {
+  fill: none;
+  stroke: #2f4667;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+#upward-current-band .upward-anchor {
+  fill: #1e2e46;
+}
+
+#upward-target-band {
+  background: linear-gradient(180deg, #6e4f33 0%, #4a341f 100%);
+}
+
+#upward-arrow {
+  position: fixed;
+  height: 4px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(213, 163, 102, 0.85), rgba(213, 163, 102, 0.1));
+  border-radius: 999px;
+  z-index: 7;
+  pointer-events: none;
+}
+
+#upward-arrow::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid rgba(213, 163, 102, 0.9);
 }
 
 @keyframes pressureJitterLow {

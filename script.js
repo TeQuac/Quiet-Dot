@@ -52,6 +52,7 @@ const highscoreModeNormalButton = document.getElementById('highscore-mode-normal
 const highscoreModeSplitButton = document.getElementById('highscore-mode-split');
 const highscoreModePressureButton = document.getElementById('highscore-mode-pressure');
 const highscoreModeBlackholeButton = document.getElementById('highscore-mode-blackhole');
+const highscoreModeUpwardButton = document.getElementById('highscore-mode-upward');
 const highscoreList = document.getElementById('highscore-list');
 const highscoreEmpty = document.getElementById('highscore-empty');
 const highscoreCloseButton = document.getElementById('highscore-close');
@@ -60,7 +61,8 @@ const highscoreModeButtons = [
   [highscoreModeNormalButton, 'normal'],
   [highscoreModeSplitButton, 'split'],
   [highscoreModePressureButton, 'pressure'],
-  [highscoreModeBlackholeButton, 'blackhole']
+  [highscoreModeBlackholeButton, 'blackhole'],
+  [highscoreModeUpwardButton, 'upward']
 ];
 highscoreModeButtons.forEach(([button, mode]) => button.dataset.mode = mode);
 
@@ -69,6 +71,7 @@ const modeNormalButton = document.getElementById('mode-normal');
 const modeSplitButton = document.getElementById('mode-split');
 const modePressureButton = document.getElementById('mode-pressure');
 const modeBlackholeButton = document.getElementById('mode-blackhole');
+const modeUpwardButton = document.getElementById('mode-upward');
 const modeBackButton = document.getElementById('mode-back');
 const modeExplainOverlay = document.getElementById('mode-explain-overlay');
 const modeExplainTitle = document.getElementById('mode-explain-title');
@@ -82,6 +85,9 @@ const pressureHintOverlay = document.getElementById('pressure-hint-overlay');
 const pressureHintCloseButton = document.getElementById('pressure-hint-close');
 const blackholeHintOverlay = document.getElementById('blackhole-hint-overlay');
 const blackholeHintCloseButton = document.getElementById('blackhole-hint-close');
+const upwardCurrentBand = document.getElementById('upward-current-band');
+const upwardTargetBand = document.getElementById('upward-target-band');
+const upwardArrow = document.getElementById('upward-arrow');
 
 const storageKeys = {
   users: 'silentapUsers',
@@ -94,7 +100,8 @@ const gameModes = {
   normal: { labelKey: 'modeNormal' },
   split: { labelKey: 'modeSplit' },
   pressure: { labelKey: 'modePressure' },
-  blackhole: { labelKey: 'modeBlackhole' }
+  blackhole: { labelKey: 'modeBlackhole' },
+  upward: { labelKey: 'modeUpward' }
 };
 
 const developerEmail = 'te.quac@web.de';
@@ -130,22 +137,24 @@ const translations = {
     noHighscores: 'Noch keine Highscores vorhanden.', noModeHighscores: 'Noch keine {mode}-Highscores vorhanden.', close: 'Schließen',
     splitHintTitle: 'Split-Modus Wertung', splitHintText: 'Ein Punkt zählt nur, wenn beide Punkte nacheinander getroffen werden – Reihenfolge egal.',
     splitCounts: '✅ zählt', splitNoCount: '❌ zählt nicht', understood: 'Verstanden',
-    modeChoose: 'Spielmodus wählen', modeVisualHint: 'Auswahl wird durch Animationen erklärt.', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.\nSchwarzes Loch: Der Dot teleportiert nach oben und wird von unten angesaugt. Jeder Treffer erhöht die Saugkraft um 5%.',
+    modeChoose: 'Spielmodus wählen', modeVisualHint: 'Auswahl wird durch Animationen erklärt.', modeDescription: 'Normal: Ein Punkt über das ganze Feld.\nSplit: Zwei Hälften mit Mittelbalken und je ein Punkt pro Seite.\nDruck: Wie Normal, aber jeder Punkt muss in 5 Sekunden getroffen werden.\nSchwarzes Loch: Der Dot teleportiert nach oben und wird von unten angesaugt. Jeder Treffer erhöht die Saugkraft um 5%.\nNach oben: Ziehe ein waagerechtes Band nach unten und lasse los, um den Dot auf das nächste Band zu schleudern.',
     modeExplainTitle: 'So funktioniert {mode}', modeExplainStart: 'Spiel starten', modeExplainBack: 'Zurück',
     modeExplainNormal: 'Ein Punkt bewegt sich frei über das Feld. Jeder Treffer gibt einen Punkt.',
     modeExplainSplit: 'Treffe links und rechts abwechselnd. Nur der Wechsel zwischen den Seiten zählt.',
     modeExplainPressure: 'Wie Normal, aber jeder Punkt muss innerhalb von 5 Sekunden getroffen werden.',
     modeExplainBlackhole: 'Der Punkt wird nach unten gezogen. Mit jedem Treffer steigt die Sogkraft.',
+    modeExplainUpward: 'Ziehe das Gummiband nach unten und lasse los, um den Dot auf das nächste Band im oberen Bereich zu schleudern.',
     back: 'Zurück', pressureHintTitle: 'Druck-Modus', pressureHintText1: 'Du spielst wie im Normal-Modus, aber jeder Punkt hat nur 5 Sekunden Lebenszeit.', pressureHintText2: 'Mit jeder Sekunde wird der Punkt nervöser und zittert stärker. Triff ihn rechtzeitig – sonst explodiert er!', blackholeHintTitle: 'Schwarzes-Loch-Modus', blackholeHintText1: 'Der Dot startet in der Mitte und teleportiert bei jedem Treffer nach oben in eine zufällige Richtung.', blackholeHintText2: 'Unten rotiert ein Schwarzes Loch, das den Dot ansaugt. Jede Berührung erhöht die Saugkraft um 5%.',
     letsGo: "Los geht's", newHighscore: 'Highscore!', tryAgain: 'Nochmal!', backToMenu: '← Startmenü', support: '☕️ Support',
     alertFeedbackOffline: 'Feedback konnte nicht gesendet werden: keine Verbindung verfügbar.', alertFeedbackError: 'Feedback konnte nicht gesendet werden. Bitte versuche es später erneut.', alertFeedbackSent: 'Vielen Dank! Dein Feedback wurde gesendet.',
     errFeedbackMinLength: 'Bitte mindestens 3 Zeichen eingeben.', errUsernameMin: 'Username muss mindestens 3 Zeichen lang sein.', errPasswordMin: 'Passwort muss mindestens 4 Zeichen lang sein.', errPasswordMismatch: 'Passwörter stimmen nicht überein.', errUsernameTaken: 'Dieser Username ist bereits vergeben.', errUserSave: 'User konnte nicht gespeichert werden. Bitte versuche es erneut.', errUserNotFound: 'User nicht gefunden. Bitte registrieren.', errPasswordWrong: 'Passwort ist nicht korrekt.', errLoginFailed: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
-    modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Druck', modePressureLabel: 'Druck', modeBlackhole: 'Schwarzes Loch',
+    modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Druck', modePressureLabel: 'Druck', modeBlackhole: 'Schwarzes Loch', modeUpward: 'Nach oben',
     introTitle: 'Willkommen bei Silentap 👋', introLead: 'Kurze Demo vor dem Login:',
     introModeNormal: 'Normal: Ein Punkt erscheint irgendwo auf dem Feld. Tippe ihn so schnell wie möglich an.',
     introModeSplit: 'Split: Zwei Punkte (links/rechts). Ein Punkt zählt nur, wenn du abwechselnd beide Seiten triffst.',
     introModePressure: 'Druck: Wie Normal, aber jeder Punkt lebt nur 5 Sekunden und explodiert sonst.',
     introModeBlackhole: 'Schwarzes Loch: Der Dot teleportiert nach oben und wird von unten immer stärker angesogen.',
+    introModeUpward: 'Nach oben: Ziehe das Band nach unten und lasse los, um den Dot nach oben zu schleudern.',
     introQuestion: 'Möchtest du Silentap jetzt spielen?', introAccept: 'Ja, spielen', introDecline: 'Nein, schließen',
     introCloseHint: 'Der Tab konnte nicht automatisch geschlossen werden. Du kannst ihn jetzt manuell schließen.'
   },
@@ -156,13 +165,15 @@ const translations = {
     start: 'Start', switchUser: 'Sign in as another user', settingsTitle: 'Settings', settingsOpen: 'Open settings', settingsClose: 'Close', settingsLanguageLabel: 'Language: {language}', settingsLanguageButton: 'Change language', feedbackToDev: 'Message to developer',
     highscoreAria: 'Open top-10 highscores', highscoreTitle: 'Top 10 highscores', highscoreModesAria: 'Game modes for highscores', noHighscores: 'No highscores yet.', noModeHighscores: 'No {mode} highscores yet.', close: 'Close',
     splitHintTitle: 'Split mode scoring', splitHintText: 'A point only counts if both dots are hit consecutively – order does not matter.', splitCounts: '✅ counts', splitNoCount: '❌ does not count', understood: 'Understood',
-    modeChoose: 'Choose game mode', modeVisualHint: 'Animations explain each mode.', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.\nBlack Hole: The dot teleports upward and is pulled from below. Every hit increases suction by 5%.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', blackholeHintTitle: 'Black Hole mode', blackholeHintText1: 'The dot starts in the middle and teleports upward in a random direction after each hit.', blackholeHintText2: 'A rotating black hole at the bottom pulls the dot in. Every hit increases suction by 5%.', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
+    modeChoose: 'Choose game mode', modeVisualHint: 'Animations explain each mode.', modeDescription: 'Normal: One dot on the full field.\nSplit: Two halves with middle bar and one dot per side.\nPressure: Like Normal, but each dot must be hit within 5 seconds.\nBlack Hole: The dot teleports upward and is pulled from below. Every hit increases suction by 5%.\nUpward: Pull a horizontal band down and release to sling the dot onto the next band above.', back: 'Back', pressureHintTitle: 'Pressure mode', pressureHintText1: 'You play like in Normal mode, but each dot only lives for 5 seconds.', pressureHintText2: 'With every second the dot gets more nervous and shakes harder. Hit it in time – otherwise it explodes!', blackholeHintTitle: 'Black Hole mode', blackholeHintText1: 'The dot starts in the middle and teleports upward in a random direction after each hit.', blackholeHintText2: 'A rotating black hole at the bottom pulls the dot in. Every hit increases suction by 5%.', letsGo: "Let's go", newHighscore: 'Highscore!', tryAgain: 'Try again!', backToMenu: '← Start menu', support: '☕️ Support', userHighscoreLine: 'Normal: {normal} | Split: {split} | Pressure: {pressure}',
     alertFeedbackOffline: 'Feedback could not be sent: no connection available.', alertFeedbackError: 'Feedback could not be sent. Please try again later.', alertFeedbackSent: 'Thank you! Your feedback has been sent.',
-    errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure', modeBlackhole: 'Black Hole',
+    errFeedbackMinLength: 'Please enter at least 3 characters.', errUsernameMin: 'Username must be at least 3 characters long.', errPasswordMin: 'Password must be at least 4 characters long.', errPasswordMismatch: 'Passwords do not match.', errUsernameTaken: 'This username is already taken.', errUserSave: 'User could not be saved. Please try again.', errUserNotFound: 'User not found. Please register.', errPasswordWrong: 'Password is incorrect.', errLoginFailed: 'Login failed. Please try again.', modeNormal: 'Normal', modeSplit: 'Split', modePressure: 'Pressure', modePressureLabel: 'Pressure', modeBlackhole: 'Black Hole', modeUpward: 'Upward',
     introTitle: 'Welcome to Silentap 👋', introLead: 'Quick demo before login:',
     introModeNormal: 'Normal: One dot appears anywhere on the field. Tap it as quickly as possible.',
     introModeSplit: 'Split: Two dots (left/right). A point counts only when you alternate between both sides.',
     introModePressure: 'Pressure: Like Normal, but each dot only lives for 5 seconds and explodes otherwise.',
+    introModeBlackhole: 'Black Hole: The dot teleports upward and gets pulled harder from below after every hit.',
+    introModeUpward: 'Upward: Pull a horizontal band down and release to sling the dot onto the next band above.',
     introQuestion: 'Do you want to play Silentap now?', introAccept: 'Yes, play', introDecline: 'No, close',
     introCloseHint: 'The tab could not be closed automatically. Please close it manually.'
   },
@@ -232,7 +243,8 @@ modeNormal: 'Обычный',
 modeSplit: 'Двойной',
 modePressure: 'Давление',
 modePressureLabel: 'Давление',
-modeBlackhole: 'Чёрная дыра'
+modeBlackhole: 'Чёрная дыра',
+modeUpward: 'Вверх'
   },
   tr: {
   authWelcome: 'Silentap’e hoş geldin',
@@ -302,6 +314,7 @@ modeBlackhole: 'Чёрная дыра'
   modePressure: 'Baskı',
   modePressureLabel: 'Baskı',
   modeBlackhole: 'Kara Delik',
+  modeUpward: 'Yukarı',
   },
   zh: {
   authWelcome: '欢迎来到 Silentap',
@@ -371,6 +384,7 @@ modeBlackhole: 'Чёрная дыра'
   modePressure: '压力',
   modePressureLabel: '压力',
   modeBlackhole: '黑洞',
+  modeUpward: '向上',
   },
 };
 
@@ -480,10 +494,12 @@ function applyTranslations() {
   highscoreModeSplitButton.textContent = '';
   highscoreModePressureButton.textContent = '';
   highscoreModeBlackholeButton.textContent = '';
+  highscoreModeUpwardButton.textContent = '';
   highscoreModeNormalButton.setAttribute('aria-label', t('modeNormal'));
   highscoreModeSplitButton.setAttribute('aria-label', t('modeSplit'));
   highscoreModePressureButton.setAttribute('aria-label', t('modePressureLabel'));
   highscoreModeBlackholeButton.setAttribute('aria-label', t('modeBlackhole'));
+  highscoreModeUpwardButton.setAttribute('aria-label', t('modeUpward'));
   highscoreCloseButton.textContent = t('close');
 
   document.getElementById('split-hint-title').textContent = t('splitHintTitle');
@@ -497,6 +513,7 @@ function applyTranslations() {
   modeSplitButton.textContent = t('modeSplit');
   modePressureButton.textContent = t('modePressureLabel');
   modeBlackholeButton.textContent = t('modeBlackhole');
+  modeUpwardButton.textContent = t('modeUpward');
   modeBackButton.textContent = t('back');
   modeExplainBackButton.textContent = t('modeExplainBack');
   modeExplainStartButton.textContent = t('modeExplainStart');
@@ -580,12 +597,28 @@ let modeStartInProgress = false;
 let modeStartAnimationFrameId = null;
 let pendingModeForStart = null;
 
+const upwardState = {
+  active: false,
+  flying: false,
+  dragging: false,
+  currentBand: null,
+  targetBand: null,
+  restBand: null,
+  anchorLeft: null,
+  anchorRight: null,
+  velocityX: 0,
+  velocityY: 0,
+  previousTop: 0,
+  animationId: null
+};
+
 function ensureUserRecordShape(user) {
   const highscores = {
     normal: Number.isFinite(user?.highscores?.normal) ? user.highscores.normal : Number.isFinite(user?.highscore) ? user.highscore : 0,
     split: Number.isFinite(user?.highscores?.split) ? user.highscores.split : 0,
     pressure: Number.isFinite(user?.highscores?.pressure) ? user.highscores.pressure : Number.isFinite(user?.pressure_highscore) ? user.pressure_highscore : 0,
-    blackhole: Number.isFinite(user?.highscores?.blackhole) ? user.highscores.blackhole : Number.isFinite(user?.blackhole_highscore) ? user.blackhole_highscore : 0
+    blackhole: Number.isFinite(user?.highscores?.blackhole) ? user.highscores.blackhole : Number.isFinite(user?.blackhole_highscore) ? user.blackhole_highscore : 0,
+    upward: Number.isFinite(user?.highscores?.upward) ? user.highscores.upward : Number.isFinite(user?.upward_highscore) ? user.upward_highscore : 0
   };
 
   return {
@@ -630,7 +663,7 @@ function upsertUserCache(name, mode, score) {
   }
 
   if (!existing.highscores) {
-    existing.highscores = { normal: 0, split: 0, pressure: 0, blackhole: 0 };
+    existing.highscores = { normal: 0, split: 0, pressure: 0, blackhole: 0, upward: 0 };
   }
 
   existing.highscores[mode] = Math.max(getScore(existing, mode), score);
@@ -676,10 +709,12 @@ function renderHighscoreList(users, mode, currentUserRank = null) {
   highscoreModeSplitButton.classList.toggle('active', mode === 'split');
   highscoreModePressureButton.classList.toggle('active', mode === 'pressure');
   highscoreModeBlackholeButton.classList.toggle('active', mode === 'blackhole');
+  highscoreModeUpwardButton.classList.toggle('active', mode === 'upward');
   highscoreModeNormalButton.setAttribute('aria-selected', String(mode === 'normal'));
   highscoreModeSplitButton.setAttribute('aria-selected', String(mode === 'split'));
   highscoreModePressureButton.setAttribute('aria-selected', String(mode === 'pressure'));
   highscoreModeBlackholeButton.setAttribute('aria-selected', String(mode === 'blackhole'));
+  highscoreModeUpwardButton.setAttribute('aria-selected', String(mode === 'upward'));
 
   highscoreList.innerHTML = '';
   if (entries.length === 0) {
@@ -746,11 +781,11 @@ function renderHighscoreList(users, mode, currentUserRank = null) {
 async function fetchTopTenRemote() {
   if (!supabaseClient) return null;
 
-  const scoreColumn = selectedHighscoreMode === 'split' ? 'split_highscore' : selectedHighscoreMode === 'pressure' ? 'pressure_highscore' : selectedHighscoreMode === 'blackhole' ? 'blackhole_highscore' : 'highscore';
+  const scoreColumn = selectedHighscoreMode === 'split' ? 'split_highscore' : selectedHighscoreMode === 'pressure' ? 'pressure_highscore' : selectedHighscoreMode === 'blackhole' ? 'blackhole_highscore' : selectedHighscoreMode === 'upward' ? 'upward_highscore' : 'highscore';
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, upward_highscore')
     .gt(scoreColumn, 0)
     .order(scoreColumn, { ascending: false, nullsFirst: false })
     .order('updated_at', { ascending: true })
@@ -763,18 +798,18 @@ async function fetchTopTenRemote() {
 
   return (data || []).map((entry) => ensureUserRecordShape({
     name: entry.username,
-    highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore }
+    highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore, upward: entry.upward_highscore }
   }));
 }
 
 async function fetchCurrentUserRankRemote(mode) {
   if (!supabaseClient || !currentUser?.name) return null;
 
-  const scoreColumn = mode === 'split' ? 'split_highscore' : mode === 'pressure' ? 'pressure_highscore' : mode === 'blackhole' ? 'blackhole_highscore' : 'highscore';
+  const scoreColumn = mode === 'split' ? 'split_highscore' : mode === 'pressure' ? 'pressure_highscore' : mode === 'blackhole' ? 'blackhole_highscore' : mode === 'upward' ? 'upward_highscore' : 'highscore';
 
   const { data: userData, error: userError } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, upward_highscore')
     .ilike('username', currentUser.name)
     .limit(1)
     .maybeSingle();
@@ -787,7 +822,8 @@ async function fetchCurrentUserRankRemote(mode) {
       normal: userData.highscore,
       split: userData.split_highscore,
       pressure: userData.pressure_highscore,
-      blackhole: userData.blackhole_highscore
+      blackhole: userData.blackhole_highscore,
+      upward: userData.upward_highscore
     }
   });
 
@@ -826,7 +862,7 @@ function shapeRemoteUser(entry) {
   return {
     record: ensureUserRecordShape({
       name: entry.username,
-      highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore }
+      highscores: { normal: entry.highscore, split: entry.split_highscore, pressure: entry.pressure_highscore, blackhole: entry.blackhole_highscore, upward: entry.upward_highscore }
     }),
     passwordHash: entry.password_hash || null
   };
@@ -837,7 +873,7 @@ async function fetchUserRemote(name) {
 
   const { data, error } = await supabaseClient
     .from('game_scores')
-    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, upward_highscore, password_hash')
     .ilike('username', name)
     .limit(1)
     .maybeSingle();
@@ -855,7 +891,7 @@ async function createUserRemote(name, passwordHash) {
     return {
       record: ensureUserRecordShape({
         name,
-        highscores: { normal: 0, split: 0, pressure: 0, blackhole: 0 }
+        highscores: { normal: 0, split: 0, pressure: 0, blackhole: 0, upward: 0 }
       }),
       passwordHash
     };
@@ -869,9 +905,10 @@ async function createUserRemote(name, passwordHash) {
       split_highscore: 0,
       pressure_highscore: 0,
       blackhole_highscore: 0,
+      upward_highscore: 0,
       password_hash: passwordHash
     })
-    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, upward_highscore, password_hash')
     .single();
 
   if (error) {
@@ -886,7 +923,7 @@ async function setUserPasswordRemote(name, passwordHash) {
     return {
       record: ensureUserRecordShape({
         name,
-        highscores: { normal: 0, split: 0, pressure: 0, blackhole: 0 }
+        highscores: { normal: 0, split: 0, pressure: 0, blackhole: 0, upward: 0 }
       }),
       passwordHash
     };
@@ -896,7 +933,7 @@ async function setUserPasswordRemote(name, passwordHash) {
     .from('game_scores')
     .update({ password_hash: passwordHash })
     .eq('username', name)
-    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, password_hash')
+    .select('username, highscore, split_highscore, pressure_highscore, blackhole_highscore, upward_highscore, password_hash')
     .single();
 
   if (error) {
@@ -928,7 +965,7 @@ async function upsertUserHighscoreRemote(name, mode, score) {
 
   return ensureUserRecordShape({
     name: data.username,
-    highscores: { normal: data.highscore, split: data.split_highscore, pressure: data.pressure_highscore, blackhole: data.blackhole_highscore }
+    highscores: { normal: data.highscore, split: data.split_highscore, pressure: data.pressure_highscore, blackhole: data.blackhole_highscore, upward: data.upward_highscore }
   });
 }
 
@@ -1002,10 +1039,12 @@ async function updateCurrentUserHighscore(score) {
     currentUser.highscores.split = Math.max(getScore(currentUser, 'split'), getScore(remoteUser, 'split'));
     currentUser.highscores.pressure = Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser, 'pressure'));
     currentUser.highscores.blackhole = Math.max(getScore(currentUser, 'blackhole'), getScore(remoteUser, 'blackhole'));
+    currentUser.highscores.upward = Math.max(getScore(currentUser, 'upward'), getScore(remoteUser, 'upward'));
     upsertUserCache(currentUser.name, 'normal', getScore(currentUser, 'normal'));
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
     upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
     upsertUserCache(currentUser.name, 'blackhole', getScore(currentUser, 'blackhole'));
+    upsertUserCache(currentUser.name, 'upward', getScore(currentUser, 'upward'));
   } catch (error) {
     console.warn('Highscore konnte nicht synchronisiert werden:', error.message);
   }
@@ -1033,10 +1072,16 @@ function showGameElements() {
   splitDivider.hidden = currentMode !== 'split';
   blackhole.classList.toggle('hidden', currentMode !== 'blackhole');
   blackhole.hidden = currentMode !== 'blackhole';
+
+  const showUpward = currentMode === 'upward';
+  [upwardCurrentBand, upwardTargetBand, upwardArrow].forEach((element) => {
+    element.classList.toggle('hidden', !showUpward);
+    element.hidden = !showUpward;
+  });
 }
 
 function hideGameElements() {
-  [dot, dotSplit, splitDivider, blackhole, ...alwaysVisibleInGame, tryAgainMessage, missIndicator, newHighscoreDisplay].forEach((element) => {
+  [dot, dotSplit, splitDivider, blackhole, upwardCurrentBand, upwardTargetBand, upwardArrow, ...alwaysVisibleInGame, tryAgainMessage, missIndicator, newHighscoreDisplay].forEach((element) => {
     element.classList.add('hidden');
     element.hidden = true;
   });
@@ -1054,11 +1099,16 @@ function isBlackholeMode() {
   return currentMode === 'blackhole';
 }
 
+function isUpwardMode() {
+  return currentMode === 'upward';
+}
+
 function updateModeButtons() {
   modeNormalButton.classList.toggle('active', currentMode === 'normal');
   modeSplitButton.classList.toggle('active', currentMode === 'split');
   modePressureButton.classList.toggle('active', currentMode === 'pressure');
   modeBlackholeButton.classList.toggle('active', currentMode === 'blackhole');
+  modeUpwardButton.classList.toggle('active', currentMode === 'upward');
 }
 
 function showStartMenu() {
@@ -1226,6 +1276,7 @@ function getModeExplainTextKey(mode) {
   if (mode === 'split') return 'modeExplainSplit';
   if (mode === 'pressure') return 'modeExplainPressure';
   if (mode === 'blackhole') return 'modeExplainBlackhole';
+  if (mode === 'upward') return 'modeExplainUpward';
   return 'modeExplainNormal';
 }
 
@@ -1313,6 +1364,9 @@ function setGameActive(active) {
     updateSplitTargetHighlight();
     stopAllMovement();
     blackholeSuctionMultiplier = blackholeBaseSuction;
+    if (isUpwardMode()) {
+      resetUpwardRound(false);
+    }
     if (isPressureMode()) {
       startPressureModeTimer();
     }
@@ -1321,6 +1375,7 @@ function setGameActive(active) {
     clearPendingTimers();
     clearPressureModeTimer();
     stopAllMovement();
+    if (upwardState.animationId) { cancelAnimationFrame(upwardState.animationId); upwardState.animationId = null; }
     splitSequenceLastTappedSide = null;
     updateSplitTargetHighlight();
     hideNewHighscoreMessage();
@@ -1348,7 +1403,8 @@ async function updateTicker() {
         normal: Math.max(getScore(currentUser, 'normal'), getScore(remoteUser.record, 'normal')),
         split: Math.max(getScore(currentUser, 'split'), getScore(remoteUser.record, 'split')),
         pressure: Math.max(getScore(currentUser, 'pressure'), getScore(remoteUser.record, 'pressure')),
-        blackhole: Math.max(getScore(currentUser, 'blackhole'), getScore(remoteUser.record, 'blackhole'))
+        blackhole: Math.max(getScore(currentUser, 'blackhole'), getScore(remoteUser.record, 'blackhole')),
+        upward: Math.max(getScore(currentUser, 'upward'), getScore(remoteUser.record, 'upward'))
       }
     });
 
@@ -1356,6 +1412,7 @@ async function updateTicker() {
     upsertUserCache(currentUser.name, 'split', getScore(currentUser, 'split'));
     upsertUserCache(currentUser.name, 'pressure', getScore(currentUser, 'pressure'));
     upsertUserCache(currentUser.name, 'blackhole', getScore(currentUser, 'blackhole'));
+    upsertUserCache(currentUser.name, 'upward', getScore(currentUser, 'upward'));
     updateCurrentUserHighscoreDisplay();
   }
 }
@@ -1775,6 +1832,10 @@ function moveDot(dotElement) {
     return;
   }
 
+  if (isUpwardMode()) {
+    return;
+  }
+
   const avoidRects = getBlockingRects();
   const dotSize = dotElement.offsetWidth;
   const bounds = getBoundsForDot(dotElement);
@@ -1841,6 +1902,11 @@ function getCenteredPosition(dotElement, dotIndex = 0) {
 }
 
 function resetDots() {
+  if (isUpwardMode()) {
+    resetUpwardRound(true);
+    return;
+  }
+
   getDotsForMode().forEach((dotElement, index) => {
     const centeredPosition = getCenteredPosition(dotElement, index);
     dotElement.style.left = centeredPosition.left;
@@ -1889,6 +1955,11 @@ function clearPressureModeTimer() {
 }
 
 function resetRoundToCenterWithTryAgain() {
+  if (isUpwardMode()) {
+    resetUpwardRound(false);
+    return;
+  }
+
   taps = 0;
   misses = 0;
   triggerResetHaptic();
@@ -2119,6 +2190,260 @@ function triggerResetHaptic() {
   return patternTriggered;
 }
 
+function randomUpwardBand(yMinRatio = 0.08, yMaxRatio = 0.33) {
+  const { width, height } = getViewportSize();
+  const dotSize = dot.offsetWidth || 50;
+  const minWidth = Math.max(52, dotSize + 12);
+  const maxWidth = Math.max(minWidth, width - (dotSize * 2) - 20);
+  const bandWidth = Math.round(minWidth + (Math.random() * (maxWidth - minWidth)));
+  const minCenterX = (bandWidth / 2) + dotSize + 4;
+  const maxCenterX = width - (bandWidth / 2) - dotSize - 4;
+  const centerX = minCenterX + (Math.random() * Math.max(2, maxCenterX - minCenterX));
+  const y = (height * yMinRatio) + (Math.random() * (height * (yMaxRatio - yMinRatio)));
+  return { centerX, y, width: bandWidth };
+}
+
+function renderUpwardBand(element, band, options = {}) {
+  if (!element || !band) return;
+
+  const { elastic = false, anchors = null } = options;
+  if (!elastic) {
+    element.style.width = `${band.width}px`;
+    element.style.left = `${band.centerX - (band.width / 2)}px`;
+    element.style.top = `${band.y}px`;
+    return;
+  }
+
+  const leftX = anchors?.leftX ?? (band.centerX - (band.width / 2));
+  const rightX = anchors?.rightX ?? (band.centerX + (band.width / 2));
+  const minX = Math.min(leftX, rightX);
+  const maxX = Math.max(leftX, rightX);
+  const width = Math.max(2, maxX - minX);
+  const topY = Math.min(anchors?.y ?? band.y, band.y);
+  const height = Math.max(10, Math.abs((anchors?.y ?? band.y) - band.y) + 14);
+
+  element.style.left = `${minX}px`;
+  element.style.top = `${topY - 6}px`;
+  element.style.width = `${width}px`;
+  element.style.height = `${height}px`;
+  element.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+  const startY = (anchors?.y ?? band.y) - topY;
+  const endY = startY;
+  const controlX = band.centerX - minX;
+  const controlY = band.y - topY;
+
+  element.innerHTML = `
+    <circle class="upward-anchor" cx="0" cy="${startY}" r="4"></circle>
+    <circle class="upward-anchor" cx="${width}" cy="${endY}" r="4"></circle>
+    <path class="upward-band-path" d="M 0 ${startY} Q ${controlX} ${controlY} ${width} ${endY}"></path>
+  `;
+}
+
+function setDotPosition(left, top) {
+  dot.style.left = `${left}px`;
+  dot.style.top = `${top}px`;
+}
+
+function placeDotOnBand(band) {
+  const dotSize = dot.offsetWidth || 50;
+  setDotPosition(band.centerX - (dotSize / 2), band.y - dotSize);
+  upwardState.previousTop = parseFloat(dot.style.top) || 0;
+}
+
+function resetUpwardRound(keepScore = false) {
+  const { width, height } = getViewportSize();
+  upwardState.active = true;
+  upwardState.flying = false;
+  upwardState.dragging = false;
+  upwardState.velocityX = 0;
+  upwardState.velocityY = 0;
+  upwardArrow.classList.add('hidden');
+
+  const baseWidth = Math.max(90, Math.min(width * 0.44, width - 120));
+  upwardState.currentBand = { centerX: width / 2, y: height * 0.68, width: baseWidth };
+  upwardState.restBand = { ...upwardState.currentBand };
+  upwardState.anchorLeft = { x: upwardState.restBand.centerX - (upwardState.restBand.width / 2), y: upwardState.restBand.y };
+  upwardState.anchorRight = { x: upwardState.restBand.centerX + (upwardState.restBand.width / 2), y: upwardState.restBand.y };
+  upwardState.targetBand = randomUpwardBand();
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
+  renderUpwardBand(upwardTargetBand, upwardState.targetBand);
+  placeDotOnBand(upwardState.currentBand);
+
+  if (!keepScore) {
+    taps = 0;
+    counter.textContent = '0';
+    hideTryAgainMessage();
+  }
+}
+
+function settleOnBand(band, scored = false) {
+  upwardState.flying = false;
+  upwardState.dragging = false;
+  upwardState.velocityX = 0;
+  upwardState.velocityY = 0;
+  dot.classList.remove('upward-flying');
+  upwardState.currentBand = { ...band };
+  upwardState.restBand = { ...band };
+  upwardState.anchorLeft = { x: upwardState.restBand.centerX - (upwardState.restBand.width / 2), y: upwardState.restBand.y };
+  upwardState.anchorRight = { x: upwardState.restBand.centerX + (upwardState.restBand.width / 2), y: upwardState.restBand.y };
+
+  if (scored) {
+    taps++;
+    counter.textContent = String(taps);
+    updateCurrentUserHighscore(taps);
+    upwardState.targetBand = randomUpwardBand();
+  }
+
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
+  renderUpwardBand(upwardTargetBand, upwardState.targetBand);
+  placeDotOnBand(upwardState.currentBand);
+}
+
+function updateUpwardFlight() {
+  if (!gameActive || !isUpwardMode() || !upwardState.flying) return;
+
+  const dotSize = dot.offsetWidth || 50;
+  const { width, height } = getViewportSize();
+  let left = parseFloat(dot.style.left) || 0;
+  let top = parseFloat(dot.style.top) || 0;
+
+  upwardState.velocityY += 0.42;
+  left += upwardState.velocityX;
+  top += upwardState.velocityY;
+
+  if (left <= 0) {
+    left = 0;
+    upwardState.velocityX = Math.abs(upwardState.velocityX) * 0.92;
+  } else if (left >= width - dotSize) {
+    left = width - dotSize;
+    upwardState.velocityX = -Math.abs(upwardState.velocityX) * 0.92;
+  }
+
+  const centerX = left + (dotSize / 2);
+  const previousBottom = upwardState.previousTop + dotSize;
+  const currentBottom = top + dotSize;
+  const previousTop = upwardState.previousTop;
+
+  const collisionBands = [
+    { band: upwardState.currentBand, scored: false },
+    { band: upwardState.targetBand, scored: true }
+  ];
+
+  for (const { band, scored } of collisionBands) {
+    if (!band) continue;
+    const half = band.width / 2;
+    const withinX = centerX >= band.centerX - half && centerX <= band.centerX + half;
+    if (!withinX) continue;
+
+    if (upwardState.velocityY > 0 && previousBottom <= band.y && currentBottom >= band.y) {
+      settleOnBand(band, scored);
+      return;
+    }
+
+    const bandBottom = band.y + 4;
+    if (upwardState.velocityY < 0 && previousTop >= bandBottom && top <= bandBottom) {
+      top = bandBottom;
+      upwardState.velocityY = Math.abs(upwardState.velocityY) * 0.85;
+    }
+  }
+
+  setDotPosition(left, top);
+  upwardState.previousTop = top;
+
+  if (top > height + dotSize) {
+    resetUpwardRound(false);
+    return;
+  }
+
+  upwardState.animationId = requestAnimationFrame(updateUpwardFlight);
+}
+
+function startUpwardLaunch() {
+  if (!gameActive || !isUpwardMode()) return;
+  if (upwardState.flying) return;
+
+  const dx = upwardState.restBand.centerX - upwardState.currentBand.centerX;
+  const dy = upwardState.restBand.y - upwardState.currentBand.y;
+  upwardState.currentBand = { ...upwardState.restBand };
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
+
+  const force = Math.min(35, Math.hypot(dx, dy) * 0.16);
+  if (force < 1) {
+    placeDotOnBand(upwardState.currentBand);
+    return;
+  }
+
+  upwardState.flying = true;
+  dot.classList.add('upward-flying');
+  upwardState.velocityX = dx * 0.16;
+  upwardState.velocityY = dy * 0.16;
+  upwardState.previousTop = parseFloat(dot.style.top) || 0;
+  upwardArrow.classList.add('hidden');
+  if (upwardState.animationId) cancelAnimationFrame(upwardState.animationId);
+  upwardState.animationId = requestAnimationFrame(updateUpwardFlight);
+}
+
+function updateUpwardArrow() {
+  const dx = upwardState.restBand.centerX - upwardState.currentBand.centerX;
+  const dy = upwardState.restBand.y - upwardState.currentBand.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 10) {
+    upwardArrow.classList.add('hidden');
+    return;
+  }
+
+  upwardArrow.classList.remove('hidden');
+  upwardArrow.hidden = false;
+  upwardArrow.style.left = `${upwardState.currentBand.centerX}px`;
+  upwardArrow.style.top = `${upwardState.currentBand.y - 8}px`;
+  upwardArrow.style.width = `${Math.min(120, dist * 0.9)}px`;
+  upwardArrow.style.transform = `translate(-50%, -50%) rotate(${Math.atan2(dy, dx) * (180 / Math.PI)}deg)`;
+}
+
+function handleUpwardPointerStart(event) {
+  if (!gameActive || !isUpwardMode()) return;
+  if (upwardState.flying) return;
+
+  const point = getInteractionPoints(event)[0];
+  if (!point) return;
+  upwardState.dragging = true;
+  event.preventDefault();
+}
+
+function handleUpwardPointerMove(event) {
+  if (!upwardState.dragging || !isUpwardMode()) return;
+  const point = getInteractionPoints(event)[0];
+  if (!point) return;
+
+  const { width, height } = getViewportSize();
+  upwardState.currentBand.centerX = Math.min(width - 45, Math.max(45, point.x));
+  upwardState.currentBand.y = Math.min(height - 36, Math.max(50, point.y));
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
+  placeDotOnBand(upwardState.currentBand);
+  updateUpwardArrow();
+  event.preventDefault();
+}
+
+function handleUpwardPointerEnd(event) {
+  if (!upwardState.dragging) return;
+  upwardState.dragging = false;
+  startUpwardLaunch();
+  event.preventDefault();
+}
+
 function isElementVisible(element) {
   return Boolean(element) && !element.hidden && !element.classList.contains('hidden');
 }
@@ -2138,10 +2463,11 @@ function isGameplayOverlayOpen() {
 function handleTap(event) {
   if (!gameActive) return;
   if (isGameplayOverlayOpen()) return;
+  if (isUpwardMode()) return;
 
   const target = event.target;
   const touchedDotElement = target?.closest?.('#dot, #dot-split');
-  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #mode-pressure, #mode-blackhole, #feedback-btn, #feedback-cancel, #feedback-submit');
+  const isControlButton = target?.closest?.('#donate, #back-to-menu, #start-btn, #mode-back, #mode-normal, #mode-split, #mode-pressure, #mode-blackhole, #mode-upward, #feedback-btn, #feedback-cancel, #feedback-submit');
   if (isControlButton) return;
 
   const interactionPoints = getInteractionPoints(event);
@@ -2232,6 +2558,8 @@ function applyMode(mode) {
   closeSplitHint();
   closePressureHint();
   closeBlackholeHint();
+  upwardState.dragging = false;
+  upwardState.flying = false;
   updateCurrentUserHighscoreDisplay();
   void updateTicker();
 }
@@ -2256,11 +2584,21 @@ document.addEventListener('wheel', (event) => {
 
 const handlePrimaryPointerDown = (event) => {
   if (event.pointerType === 'mouse' && event.button !== 0) return;
+  if (isUpwardMode()) {
+    const target = event.target;
+    if (target?.closest?.('#upward-current-band, #dot')) {
+      handleUpwardPointerStart(event);
+      return;
+    }
+  }
   handleTap(event);
 };
 
 if (window.PointerEvent) {
   document.addEventListener('pointerdown', handlePrimaryPointerDown);
+  document.addEventListener('pointermove', handleUpwardPointerMove, { passive: false });
+  document.addEventListener('pointerup', handleUpwardPointerEnd, { passive: false });
+  document.addEventListener('pointercancel', handleUpwardPointerEnd, { passive: false });
 } else {
   const isTouchDevice = 'ontouchstart' in window;
   document.addEventListener(isTouchDevice ? 'touchstart' : 'click', handleTap);
@@ -2269,7 +2607,14 @@ if (window.PointerEvent) {
 function syncGameLayoutToViewport() {
   if (gameActive) {
     resetDots();
-    if (hasRoundStarted) {
+    if (isUpwardMode()) {
+      renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
+      renderUpwardBand(upwardTargetBand, upwardState.targetBand);
+      if (!upwardState.flying) placeDotOnBand(upwardState.currentBand);
+    } else if (hasRoundStarted) {
       getDotsForMode().forEach((dotElement) => moveDot(dotElement));
     }
 
@@ -2361,6 +2706,10 @@ modeBlackholeButton.addEventListener('click', () => {
   showModeExplainOverlay('blackhole');
 });
 
+modeUpwardButton.addEventListener('click', () => {
+  showModeExplainOverlay('upward');
+});
+
 modeNormalButton.addEventListener('touchstart', (event) => {
   event.preventDefault();
   showModeExplainOverlay('normal');
@@ -2379,6 +2728,11 @@ modePressureButton.addEventListener('touchstart', (event) => {
 modeBlackholeButton.addEventListener('touchstart', (event) => {
   event.preventDefault();
   showModeExplainOverlay('blackhole');
+}, { passive: false });
+
+modeUpwardButton.addEventListener('touchstart', (event) => {
+  event.preventDefault();
+  showModeExplainOverlay('upward');
 }, { passive: false });
 
 
@@ -2433,6 +2787,12 @@ highscoreModePressureButton.addEventListener('click', async (event) => {
 highscoreModeBlackholeButton.addEventListener('click', async (event) => {
   event.preventDefault();
   setHighscoreMode('blackhole');
+  await showHighscoreOverlay();
+});
+
+highscoreModeUpwardButton.addEventListener('click', async (event) => {
+  event.preventDefault();
+  setHighscoreMode('upward');
   await showHighscoreOverlay();
 });
 
@@ -2621,6 +2981,7 @@ usernameForm.addEventListener('submit', async (event) => {
       upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
       upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
       upsertUserCache(authUser.record.name, 'blackhole', getScore(authUser.record, 'blackhole'));
+    upsertUserCache(authUser.record.name, 'upward', getScore(authUser.record, 'upward'));
       setCurrentUser(authUser.record);
       await updateTicker();
       showStartMenu();
@@ -2650,6 +3011,7 @@ usernameForm.addEventListener('submit', async (event) => {
     upsertUserCache(authUser.record.name, 'split', getScore(authUser.record, 'split'));
     upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
     upsertUserCache(authUser.record.name, 'blackhole', getScore(authUser.record, 'blackhole'));
+    upsertUserCache(authUser.record.name, 'upward', getScore(authUser.record, 'upward'));
     setCurrentUser(authUser.record);
     await updateTicker();
     showStartMenu();

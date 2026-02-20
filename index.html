@@ -108,6 +108,7 @@
         <button id="highscore-mode-split" type="button" role="tab" aria-selected="false" aria-label="Splitmodus"></button>
         <button id="highscore-mode-pressure" type="button" role="tab" aria-selected="false" aria-label="Druckmodus"></button>
         <button id="highscore-mode-blackhole" type="button" role="tab" aria-selected="false" aria-label="Schwarzes-Loch-Modus"></button>
+        <button id="highscore-mode-upward" type="button" role="tab" aria-selected="false" aria-label="Nach-oben-Modus"></button>
       </div>
       <ol id="highscore-list"></ol>
       <p id="highscore-empty" class="hidden">Noch keine Highscores vorhanden.</p>
@@ -155,6 +156,7 @@
       <button id="mode-split" type="button">Split</button>
       <button id="mode-pressure" type="button">Druck</button>
       <button id="mode-blackhole" type="button">Schwarzes Loch</button>
+      <button id="mode-upward" type="button">Nach oben</button>
       <button id="mode-back" type="button" class="secondary">Zurück</button>
     </div>
   </div>
@@ -169,6 +171,7 @@
         <span class="mode-explain-divider"></span>
         <span class="mode-explain-timer"></span>
         <span class="mode-explain-blackhole"></span>
+        <span class="mode-explain-upward-band"></span>
       </div>
       <div class="mode-explain-actions">
         <button id="mode-explain-back" type="button" class="secondary">Zurück</button>
@@ -196,6 +199,9 @@
   <div id="dot" class="hidden" hidden></div>
   <div id="dot-split" class="hidden" hidden></div>
   <div id="blackhole" class="hidden" hidden aria-hidden="true"></div>
+  <svg id="upward-current-band" class="upward-band hidden" hidden aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+  <div id="upward-target-band" class="upward-band hidden" hidden aria-hidden="true"></div>
+  <div id="upward-arrow" class="hidden" hidden aria-hidden="true"></div>
   <div id="counter" class="hidden" hidden>0</div>
   <div id="new-highscore" class="hidden" hidden>Highscore!</div>
   <div id="miss-indicator" class="hidden" hidden aria-hidden="true">❌</div>
