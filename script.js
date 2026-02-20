@@ -604,6 +604,8 @@ const upwardState = {
   currentBand: null,
   targetBand: null,
   restBand: null,
+  anchorLeft: null,
+  anchorRight: null,
   velocityX: 0,
   velocityY: 0,
   previousTop: 0,
@@ -2201,11 +2203,41 @@ function randomUpwardBand(yMinRatio = 0.08, yMaxRatio = 0.33) {
   return { centerX, y, width: bandWidth };
 }
 
-function renderUpwardBand(element, band) {
+function renderUpwardBand(element, band, options = {}) {
   if (!element || !band) return;
-  element.style.width = `${band.width}px`;
-  element.style.left = `${band.centerX - (band.width / 2)}px`;
-  element.style.top = `${band.y}px`;
+
+  const { elastic = false, anchors = null } = options;
+  if (!elastic) {
+    element.style.width = `${band.width}px`;
+    element.style.left = `${band.centerX - (band.width / 2)}px`;
+    element.style.top = `${band.y}px`;
+    return;
+  }
+
+  const leftX = anchors?.leftX ?? (band.centerX - (band.width / 2));
+  const rightX = anchors?.rightX ?? (band.centerX + (band.width / 2));
+  const minX = Math.min(leftX, rightX);
+  const maxX = Math.max(leftX, rightX);
+  const width = Math.max(2, maxX - minX);
+  const topY = Math.min(anchors?.y ?? band.y, band.y);
+  const height = Math.max(10, Math.abs((anchors?.y ?? band.y) - band.y) + 14);
+
+  element.style.left = `${minX}px`;
+  element.style.top = `${topY - 6}px`;
+  element.style.width = `${width}px`;
+  element.style.height = `${height}px`;
+  element.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+  const startY = (anchors?.y ?? band.y) - topY;
+  const endY = startY;
+  const controlX = band.centerX - minX;
+  const controlY = band.y - topY;
+
+  element.innerHTML = `
+    <circle class="upward-anchor" cx="0" cy="${startY}" r="4"></circle>
+    <circle class="upward-anchor" cx="${width}" cy="${endY}" r="4"></circle>
+    <path class="upward-band-path" d="M 0 ${startY} Q ${controlX} ${controlY} ${width} ${endY}"></path>
+  `;
 }
 
 function setDotPosition(left, top) {
@@ -2215,7 +2247,7 @@ function setDotPosition(left, top) {
 
 function placeDotOnBand(band) {
   const dotSize = dot.offsetWidth || 50;
-  setDotPosition(band.centerX - (dotSize / 2), band.y - (dotSize / 2));
+  setDotPosition(band.centerX - (dotSize / 2), band.y - dotSize);
   upwardState.previousTop = parseFloat(dot.style.top) || 0;
 }
 
@@ -2231,8 +2263,13 @@ function resetUpwardRound(keepScore = false) {
   const baseWidth = Math.max(90, Math.min(width * 0.44, width - 120));
   upwardState.currentBand = { centerX: width / 2, y: height * 0.68, width: baseWidth };
   upwardState.restBand = { ...upwardState.currentBand };
+  upwardState.anchorLeft = { x: upwardState.restBand.centerX - (upwardState.restBand.width / 2), y: upwardState.restBand.y };
+  upwardState.anchorRight = { x: upwardState.restBand.centerX + (upwardState.restBand.width / 2), y: upwardState.restBand.y };
   upwardState.targetBand = randomUpwardBand();
-  renderUpwardBand(upwardCurrentBand, upwardState.currentBand);
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
   renderUpwardBand(upwardTargetBand, upwardState.targetBand);
   placeDotOnBand(upwardState.currentBand);
 
@@ -2251,6 +2288,8 @@ function settleOnBand(band, scored = false) {
   dot.classList.remove('upward-flying');
   upwardState.currentBand = { ...band };
   upwardState.restBand = { ...band };
+  upwardState.anchorLeft = { x: upwardState.restBand.centerX - (upwardState.restBand.width / 2), y: upwardState.restBand.y };
+  upwardState.anchorRight = { x: upwardState.restBand.centerX + (upwardState.restBand.width / 2), y: upwardState.restBand.y };
 
   if (scored) {
     taps++;
@@ -2259,7 +2298,10 @@ function settleOnBand(band, scored = false) {
     upwardState.targetBand = randomUpwardBand();
   }
 
-  renderUpwardBand(upwardCurrentBand, upwardState.currentBand);
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
   renderUpwardBand(upwardTargetBand, upwardState.targetBand);
   placeDotOnBand(upwardState.currentBand);
 }
@@ -2305,7 +2347,7 @@ function updateUpwardFlight() {
       return;
     }
 
-    const bandBottom = band.y + 8;
+    const bandBottom = band.y + 4;
     if (upwardState.velocityY < 0 && previousTop >= bandBottom && top <= bandBottom) {
       top = bandBottom;
       upwardState.velocityY = Math.abs(upwardState.velocityY) * 0.85;
@@ -2330,7 +2372,10 @@ function startUpwardLaunch() {
   const dx = upwardState.restBand.centerX - upwardState.currentBand.centerX;
   const dy = upwardState.restBand.y - upwardState.currentBand.y;
   upwardState.currentBand = { ...upwardState.restBand };
-  renderUpwardBand(upwardCurrentBand, upwardState.currentBand);
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
 
   const force = Math.min(35, Math.hypot(dx, dy) * 0.16);
   if (force < 1) {
@@ -2383,7 +2428,10 @@ function handleUpwardPointerMove(event) {
   const { width, height } = getViewportSize();
   upwardState.currentBand.centerX = Math.min(width - 45, Math.max(45, point.x));
   upwardState.currentBand.y = Math.min(height - 36, Math.max(50, point.y));
-  renderUpwardBand(upwardCurrentBand, upwardState.currentBand);
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
   placeDotOnBand(upwardState.currentBand);
   updateUpwardArrow();
   event.preventDefault();
@@ -2560,7 +2608,10 @@ function syncGameLayoutToViewport() {
   if (gameActive) {
     resetDots();
     if (isUpwardMode()) {
-      renderUpwardBand(upwardCurrentBand, upwardState.currentBand);
+      renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
       renderUpwardBand(upwardTargetBand, upwardState.targetBand);
       if (!upwardState.flying) placeDotOnBand(upwardState.currentBand);
     } else if (hasRoundStarted) {
@@ -2931,7 +2982,6 @@ usernameForm.addEventListener('submit', async (event) => {
       upsertUserCache(authUser.record.name, 'pressure', getScore(authUser.record, 'pressure'));
       upsertUserCache(authUser.record.name, 'blackhole', getScore(authUser.record, 'blackhole'));
     upsertUserCache(authUser.record.name, 'upward', getScore(authUser.record, 'upward'));
-      upsertUserCache(authUser.record.name, 'upward', getScore(authUser.record, 'upward'));
       setCurrentUser(authUser.record);
       await updateTicker();
       showStartMenu();
