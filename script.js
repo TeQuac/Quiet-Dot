@@ -2258,6 +2258,7 @@ function resetUpwardRound(keepScore = false) {
   upwardState.dragging = false;
   upwardState.velocityX = 0;
   upwardState.velocityY = 0;
+  dot.classList.remove('upward-flying');
   upwardArrow.classList.add('hidden');
 
   const baseWidth = Math.max(90, Math.min(width * 0.44, width - 120));
@@ -2582,8 +2583,8 @@ document.addEventListener('wheel', (event) => {
   event.preventDefault();
 }, { passive: false });
 
-const handlePrimaryPointerDown = (event) => {
-  if (event.pointerType === 'mouse' && event.button !== 0) return;
+const handlePrimaryStart = (event) => {
+  if (typeof event.button === 'number' && event.button !== 0) return;
   if (isUpwardMode()) {
     const target = event.target;
     if (target?.closest?.('#upward-current-band, #dot')) {
@@ -2595,13 +2596,23 @@ const handlePrimaryPointerDown = (event) => {
 };
 
 if (window.PointerEvent) {
-  document.addEventListener('pointerdown', handlePrimaryPointerDown);
+  document.addEventListener('pointerdown', handlePrimaryStart);
   document.addEventListener('pointermove', handleUpwardPointerMove, { passive: false });
   document.addEventListener('pointerup', handleUpwardPointerEnd, { passive: false });
   document.addEventListener('pointercancel', handleUpwardPointerEnd, { passive: false });
 } else {
   const isTouchDevice = 'ontouchstart' in window;
-  document.addEventListener(isTouchDevice ? 'touchstart' : 'click', handleTap);
+  if (isTouchDevice) {
+    document.addEventListener('touchstart', handlePrimaryStart, { passive: false });
+    document.addEventListener('touchmove', handleUpwardPointerMove, { passive: false });
+    document.addEventListener('touchend', handleUpwardPointerEnd, { passive: false });
+    document.addEventListener('touchcancel', handleUpwardPointerEnd, { passive: false });
+  } else {
+    document.addEventListener('mousedown', handlePrimaryStart);
+    document.addEventListener('mousemove', handleUpwardPointerMove, { passive: false });
+    document.addEventListener('mouseup', handleUpwardPointerEnd, { passive: false });
+    document.addEventListener('click', handleTap);
+  }
 }
 
 function syncGameLayoutToViewport() {
