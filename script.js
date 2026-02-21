@@ -601,6 +601,7 @@ const upwardState = {
   active: false,
   flying: false,
   dragging: false,
+  transitioning: false,
   currentBand: null,
   targetBand: null,
   restBand: null,
@@ -609,7 +610,8 @@ const upwardState = {
   velocityX: 0,
   velocityY: 0,
   previousTop: 0,
-  animationId: null
+  animationId: null,
+  transitionId: null
 };
 
 function ensureUserRecordShape(user) {
@@ -2259,13 +2261,76 @@ function placeDotOnBand(band, anchors = null) {
   upwardState.previousTop = parseFloat(dot.style.top) || 0;
 }
 
+function renderUpwardCurrentBand() {
+  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
+    elastic: true,
+    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
+  });
+  placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
+}
+
+function animateUpwardBandDown(onComplete) {
+  if (upwardState.transitionId) {
+    cancelAnimationFrame(upwardState.transitionId);
+    upwardState.transitionId = null;
+  }
+
+  const { height } = getViewportSize();
+  const targetY = height * 0.68;
+  const startY = upwardState.currentBand.y;
+  const deltaY = targetY - startY;
+
+  if (Math.abs(deltaY) < 1) {
+    upwardState.currentBand.y = targetY;
+    upwardState.restBand = { ...upwardState.currentBand };
+    upwardState.anchorLeft.y = targetY;
+    upwardState.anchorRight.y = targetY;
+    renderUpwardCurrentBand();
+    if (typeof onComplete === 'function') onComplete();
+    return;
+  }
+
+  upwardState.transitioning = true;
+  const startedAt = performance.now();
+  const duration = 320;
+
+  const tick = (timestamp) => {
+    const elapsed = timestamp - startedAt;
+    const progress = Math.min(1, elapsed / duration);
+    const eased = 1 - ((1 - progress) ** 3);
+    const y = startY + (deltaY * eased);
+
+    upwardState.currentBand.y = y;
+    upwardState.anchorLeft.y = y;
+    upwardState.anchorRight.y = y;
+    renderUpwardCurrentBand();
+
+    if (progress < 1) {
+      upwardState.transitionId = requestAnimationFrame(tick);
+      return;
+    }
+
+    upwardState.transitioning = false;
+    upwardState.transitionId = null;
+    upwardState.restBand = { ...upwardState.currentBand };
+    if (typeof onComplete === 'function') onComplete();
+  };
+
+  upwardState.transitionId = requestAnimationFrame(tick);
+}
+
 function resetUpwardRound(keepScore = false) {
   const { width, height } = getViewportSize();
   upwardState.active = true;
   upwardState.flying = false;
   upwardState.dragging = false;
+  upwardState.transitioning = false;
   upwardState.velocityX = 0;
   upwardState.velocityY = 0;
+  if (upwardState.transitionId) {
+    cancelAnimationFrame(upwardState.transitionId);
+    upwardState.transitionId = null;
+  }
   dot.classList.remove('upward-flying');
   upwardArrow.classList.add('hidden');
 
@@ -2275,12 +2340,8 @@ function resetUpwardRound(keepScore = false) {
   upwardState.anchorLeft = { x: upwardState.restBand.centerX - (upwardState.restBand.width / 2), y: upwardState.restBand.y };
   upwardState.anchorRight = { x: upwardState.restBand.centerX + (upwardState.restBand.width / 2), y: upwardState.restBand.y };
   upwardState.targetBand = randomUpwardBand();
-  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
-    elastic: true,
-    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
-  });
+  renderUpwardCurrentBand();
   renderUpwardBand(upwardTargetBand, upwardState.targetBand);
-  placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
 
   if (!keepScore) {
     taps = 0;
@@ -2292,6 +2353,7 @@ function resetUpwardRound(keepScore = false) {
 function settleOnBand(band, scored = false) {
   upwardState.flying = false;
   upwardState.dragging = false;
+  upwardState.transitioning = false;
   upwardState.velocityX = 0;
   upwardState.velocityY = 0;
   dot.classList.remove('upward-flying');
@@ -2305,14 +2367,13 @@ function settleOnBand(band, scored = false) {
     counter.textContent = String(taps);
     updateCurrentUserHighscore(taps);
     upwardState.targetBand = randomUpwardBand();
+    renderUpwardBand(upwardTargetBand, upwardState.targetBand);
+    animateUpwardBandDown();
+    return;
   }
 
-  renderUpwardBand(upwardCurrentBand, upwardState.currentBand, {
-    elastic: true,
-    anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
-  });
+  renderUpwardCurrentBand();
   renderUpwardBand(upwardTargetBand, upwardState.targetBand);
-  placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
 }
 
 function updateUpwardFlight() {
@@ -2376,7 +2437,7 @@ function updateUpwardFlight() {
 
 function startUpwardLaunch() {
   if (!gameActive || !isUpwardMode()) return;
-  if (upwardState.flying) return;
+  if (upwardState.flying || upwardState.transitioning) return;
 
   const dx = upwardState.restBand.centerX - upwardState.currentBand.centerX;
   const dy = upwardState.restBand.y - upwardState.currentBand.y;
@@ -2421,7 +2482,7 @@ function updateUpwardArrow() {
 
 function handleUpwardPointerStart(event) {
   if (!gameActive || !isUpwardMode()) return;
-  if (upwardState.flying) return;
+  if (upwardState.flying || upwardState.transitioning) return;
 
   const point = getInteractionPoints(event)[0];
   if (!point) return;
