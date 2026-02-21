@@ -2357,7 +2357,7 @@ function updateUpwardFlight() {
     }
 
     const bandBottom = band.y + 4;
-    if (upwardState.velocityY < 0 && previousTop >= bandBottom && top <= bandBottom) {
+    if (scored && upwardState.velocityY < 0 && previousTop >= bandBottom && top <= bandBottom) {
       top = bandBottom;
       upwardState.velocityY = Math.abs(upwardState.velocityY) * 0.85;
     }
