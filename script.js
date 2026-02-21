@@ -2245,9 +2245,17 @@ function setDotPosition(left, top) {
   dot.style.top = `${top}px`;
 }
 
-function placeDotOnBand(band) {
+function getBandSurfaceY(band, anchors = null) {
+  if (!anchors) return band.y;
+
+  const anchorY = typeof anchors.y === 'number' ? anchors.y : band.y;
+  return (anchorY + band.y) / 2;
+}
+
+function placeDotOnBand(band, anchors = null) {
   const dotSize = dot.offsetWidth || 50;
-  setDotPosition(band.centerX - (dotSize / 2), band.y - dotSize);
+  const surfaceY = getBandSurfaceY(band, anchors);
+  setDotPosition(band.centerX - (dotSize / 2), surfaceY - dotSize);
   upwardState.previousTop = parseFloat(dot.style.top) || 0;
 }
 
@@ -2272,7 +2280,7 @@ function resetUpwardRound(keepScore = false) {
     anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
   });
   renderUpwardBand(upwardTargetBand, upwardState.targetBand);
-  placeDotOnBand(upwardState.currentBand);
+  placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
 
   if (!keepScore) {
     taps = 0;
@@ -2304,7 +2312,7 @@ function settleOnBand(band, scored = false) {
     anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
   });
   renderUpwardBand(upwardTargetBand, upwardState.targetBand);
-  placeDotOnBand(upwardState.currentBand);
+  placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
 }
 
 function updateUpwardFlight() {
@@ -2349,7 +2357,7 @@ function updateUpwardFlight() {
     }
 
     const bandBottom = band.y + 4;
-    if (upwardState.velocityY < 0 && previousTop >= bandBottom && top <= bandBottom) {
+    if (scored && upwardState.velocityY < 0 && previousTop >= bandBottom && top <= bandBottom) {
       top = bandBottom;
       upwardState.velocityY = Math.abs(upwardState.velocityY) * 0.85;
     }
@@ -2380,7 +2388,7 @@ function startUpwardLaunch() {
 
   const force = Math.min(35, Math.hypot(dx, dy) * 0.16);
   if (force < 1) {
-    placeDotOnBand(upwardState.currentBand);
+    placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
     return;
   }
 
@@ -2433,7 +2441,7 @@ function handleUpwardPointerMove(event) {
     elastic: true,
     anchors: { leftX: upwardState.anchorLeft.x, rightX: upwardState.anchorRight.x, y: upwardState.anchorLeft.y }
   });
-  placeDotOnBand(upwardState.currentBand);
+  placeDotOnBand(upwardState.currentBand, { y: upwardState.anchorLeft.y });
   updateUpwardArrow();
   event.preventDefault();
 }
