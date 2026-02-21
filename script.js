@@ -1378,6 +1378,8 @@ function setGameActive(active) {
     clearPressureModeTimer();
     stopAllMovement();
     if (upwardState.animationId) { cancelAnimationFrame(upwardState.animationId); upwardState.animationId = null; }
+    if (upwardState.transitionId) { cancelAnimationFrame(upwardState.transitionId); upwardState.transitionId = null; }
+    upwardState.transitioning = false;
     splitSequenceLastTappedSide = null;
     updateSplitTargetHighlight();
     hideNewHighscoreMessage();
@@ -2295,6 +2297,12 @@ function animateUpwardBandDown(onComplete) {
   const duration = 320;
 
   const tick = (timestamp) => {
+    if (!gameActive || !isUpwardMode()) {
+      upwardState.transitioning = false;
+      upwardState.transitionId = null;
+      return;
+    }
+
     const elapsed = timestamp - startedAt;
     const progress = Math.min(1, elapsed / duration);
     const eased = 1 - ((1 - progress) ** 3);
